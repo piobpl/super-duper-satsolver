@@ -1,78 +1,79 @@
-#ifndef __RANDOM_SOLVER_H
-#define __RANDOM_SOLVER_H
+#ifndef SRC_RANDOM_SOLVER_H_
+#define SRC_RANDOM_SOLVER_H_
 
 #include <algorithm>
 #include <deque>
 #include <random>
 #include <vector>
 
-#include "clause.h"
-#include "solver.h"
+#include "../src/clause.h"
+#include "../src/solver.h"
 
 class RandomSolver : public Solver {
-	std::random_device r;
-	std::default_random_engine e;
-	std::uniform_int_distribution<int> u;
+  std::random_device r;
+  std::default_random_engine e;
+  std::uniform_int_distribution<int> u;
 
-	int n;
-	std::vector<Clause> clauses;
-	Model model;
-	bool solved;
+  int n;
+  std::vector<Clause> clauses;
+  Model model;
+  bool solved;
 
-	int limit;
-	std::deque<int> order;
+  int limit;
+  std::deque<int> order;
 
-	bool boolean(){
-		return u(e);
-	}
-  public:
-	RandomSolver() : RandomSolver(-1) {}
+  bool boolean() {
+    return u(e);
+  }
 
-	RandomSolver(int _limit) : e(r()), u(0, 1), limit(_limit) {}
+ public:
+  RandomSolver() : RandomSolver(-1) {}
 
-	void solve(int _n, std::vector<Clause> _clauses) override {
-		n = _n;
-		clauses = _clauses;
-		int m = (int)clauses.size();
+  explicit RandomSolver(int _limit) : e(r()), u(0, 1), limit(_limit) {}
 
-		model.resize(n);
-		solved = 0;
+  void solve(int _n, std::vector<Clause> _clauses) override {
+    n = _n;
+    clauses = _clauses;
+    int m = static_cast<int>(clauses.size());
 
-		for(int i = 1; i <= n; ++i)
-			model.set(i, boolean());
-		
-		for(int i = 0; i < m; ++i)
-			order.push_back(i);
-		std::random_shuffle(order.begin(), order.end());
+    model.resize(n);
+    solved = 0;
 
-		int p = 0;
-		int cnt = 0;
-		while(p < m){
-			++cnt;
-			if(cnt == limit) return;
+    for (int i = 1; i <= n; ++i)
+      model.set(i, boolean());
 
-			int c = order[p];
-			if(model.satisifed(clauses[c])){
-				++p;
-			}else{
-				order.erase(order.begin() + p);
-				order.push_front(c);
-				p = 0;
-				for(int i = 1; i <= n; ++i)
-					if(clauses[c].has(i) || clauses[c].has(-i))
-						model.set(i, boolean());
-			}
-		}
-		solved = 1;
-	}
+    for (int i = 0; i < m; ++i)
+      order.push_back(i);
+    std::random_shuffle(order.begin(), order.end());
 
-	bool success() override {
-		return solved;
-	}
+    int p = 0;
+    int cnt = 0;
+    while (p < m) {
+      ++cnt;
+      if (cnt == limit) return;
 
-	Model solution() override {
-		return model;
-	}
+      int c = order[p];
+      if (model.satisifed(clauses[c])) {
+        ++p;
+      } else {
+        order.erase(order.begin() + p);
+        order.push_front(c);
+        p = 0;
+        for (int i = 1; i <= n; ++i)
+          if (clauses[c].has(i) || clauses[c].has(-i))
+            model.set(i, boolean());
+      }
+    }
+    solved = 1;
+  }
+
+  bool success() override {
+    return solved;
+  }
+
+  Model solution() override {
+    return model;
+  }
 };
 
-#endif
+#endif  // SRC_RANDOM_SOLVER_H_
