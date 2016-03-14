@@ -16,22 +16,11 @@ class RandomSolver : public Solver {
 
 	int n;
 	std::vector<Clause> clauses;
-	std::vector<bool> values;
+	Model model;
+	bool solved;
 
 	int limit;
 	std::deque<int> order;
-
-	bool satisifed(int c){
-		for(int i = 1; i <= n; ++i)
-			if(values[i]){
-				if(clauses[c].has(i))
-					return 1;
-			}else{
-				if(clauses[c].has(-i))
-					return 1;
-			}
-		return 0;
-	}
 
 	bool boolean(){
 		return u(e);
@@ -46,10 +35,11 @@ public:
 		clauses = _clauses;
 		int m = (int)clauses.size();
 
-		values.resize(n+1);
+		model.resize(n);
+		solved = 0;
 
 		for(int i = 1; i <= n; ++i)
-			values[i] = boolean();
+			model.set(i, boolean());
 		
 		for(int i = 0; i < m; ++i)
 			order.push_back(i);
@@ -59,10 +49,10 @@ public:
 		int cnt = 0;
 		while(p < m){
 			++cnt;
-			if(cnt == limit) break;
+			if(cnt == limit) return;
 
 			int c = order[p];
-			if(satisifed(c)){
+			if(model.satisifed(clauses[c])){
 				++p;
 			}else{
 				order.erase(order.begin() + p);
@@ -70,18 +60,18 @@ public:
 				p = 0;
 				for(int i = 1; i <= n; ++i)
 					if(clauses[c].has(i) || clauses[c].has(-i))
-						values[i] = boolean();
+						model.set(i, boolean());
 			}
 		}
-		values[0] = 1;
+		solved = 1;
 	}
 
 	bool success() override {
-		return values[0];
+		return solved;
 	}
 
-	std::vector<bool> solution() override {
-		return values;
+	Model solution() override {
+		return model;
 	}
 };
 

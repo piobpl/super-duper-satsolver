@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <deque>
+#include <iostream>
 #include <vector>
 
 #include "clause.h"
@@ -18,8 +19,5 @@ int main(){
 		solver.solve(n, clauses);
 	}while(!solver.success());
 
-	printf("SATISFIABLE\n");
-	for(int i = 1; i <= n; ++i)
-		printf("%d ", solver.solution()[i] ? 1 : 0);
-	printf("\n");
+	std::cout << solver.solution() << std::endl;
 }

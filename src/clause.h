@@ -29,7 +29,7 @@ public:
 		for(int i = 0; i < BLOCKS; ++i)
 			data[i] = o.data[i];
 	}
-	bool unsatisfiable() const {
+	bool empty() const {
 		for(int i = 0; i < BLOCKS; ++i)
 			if(data[i])
 				return 0;
