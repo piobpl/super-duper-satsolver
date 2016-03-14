@@ -25,7 +25,7 @@ class Model {
     data.resize(n+1);
   }
 
-  bool isset(int x) {
+  bool isset(int x) const {
     return used[x];
   }
 

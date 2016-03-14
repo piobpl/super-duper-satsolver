@@ -81,14 +81,6 @@ Clause operator|(const Clause &a, const Clause &b) {
   return c;
 }
 
-Clause resolve(const Clause &a, const Clause &b, int v) {
-  v = var(v);
-  Clause c = (a | b);
-  c.remove(v);
-  c.remove(v^1);
-  return c;
-}
-
 std::ostream& operator<<(std::ostream &out, const Clause &c) {
   bool st = 1;
   out << "(";
