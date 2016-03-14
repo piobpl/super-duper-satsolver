@@ -25,7 +25,7 @@ class RandomSolver : public Solver {
 	bool boolean(){
 		return u(e);
 	}
-public:
+  public:
 	RandomSolver() : RandomSolver(-1) {}
 
 	RandomSolver(int _limit) : e(r()), u(0, 1), limit(_limit) {}

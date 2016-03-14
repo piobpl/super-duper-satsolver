@@ -8,7 +8,7 @@
 #include "clause.h"
 
 class Input {
-public:
+  public:
 	static void read(int &n, std::vector<Clause> &clauses) {
 		int m;
 		char buff[4096];
@@ -17,13 +17,8 @@ public:
 		}while(buff[0] == 'c');
 		assert(sscanf(buff, "p cnf %d %d", &n, &m) == 2);
 
-		if(n > Clause::MAX_VARIABLES()){
-			std::cerr << "Too many variables\n";
-			exit(1);
-		}
-
 		for(int i = 0; i < m; ++i){
-			Clause clause;
+			Clause clause(n);
 			for(;;){
 				int v;
 				assert(scanf("%d", &v) == 1);

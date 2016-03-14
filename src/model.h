@@ -7,7 +7,7 @@
 class Model {
 	int n;
 	std::vector<bool> used, data;
-public:
+  public:
 	Model(int _n) : n(_n), used(n+1), data(n+1) {}
 	Model() : Model(0) {}
 	int size() const{

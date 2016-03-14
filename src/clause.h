@@ -1,13 +1,10 @@
 #ifndef __CLAUSE_H
 #define __CLAUSE_H
 
-#include <bitset>
 #include <iostream>
+#include <vector>
 
-const int VARCOUNT = 250;
-const int BLOCKS = (2*VARCOUNT + 63) / 64;
-
-typedef unsigned long long block_type;
+typedef unsigned long long BLOCK;
 
 int var(int v){
 	if(v > 0)
@@ -16,27 +13,22 @@ int var(int v){
 }
 
 class Clause {
-public:
-	static int MAX_VARIABLES() {
-		return VARCOUNT;
-	}
-	block_type data[BLOCKS];
-	Clause(){
-		for(int i = 0; i < BLOCKS; ++i)
-			data[i] = 0;
-	}
+  public:
+	int n, b;
+	std::vector<BLOCK> data;
+	Clause(){}
+	Clause(int _n) : n(_n), b((n + 63)/64), data(b) {}
 	Clause(const Clause &o){
-		for(int i = 0; i < BLOCKS; ++i)
-			data[i] = o.data[i];
+		data = o.data;
 	}
 	bool empty() const {
-		for(int i = 0; i < BLOCKS; ++i)
+		for(int i = 0; i < b; ++i)
 			if(data[i])
 				return 0;
 		return 1;
 	}
 	bool trivial() const {
-		for(int i = 0; i < BLOCKS; ++i)
+		for(int i = 0; i < b; ++i)
 			if(data[i] & (data[i] >> 1))
 				return 1;
 		return 0;
@@ -56,22 +48,24 @@ public:
 };
 
 bool operator<(const Clause &a, const Clause &b){
-	for(int i = 0; i < BLOCKS; ++i)
+	if(a.n != b.n) return a.n < b.n;
+	for(int i = 0; i < a.b; ++i)
 		if(a.data[i] != b.data[i])
 			return a.data[i] < b.data[i];
 	return 0;
 }
 
 bool operator==(const Clause &a, const Clause &b){
-	for(int i = 0; i < BLOCKS; ++i)
+	if(a.n != b.n) return 0;
+	for(int i = 0; i < a.n; ++i)
 		if(a.data[i] != b.data[i])
 			return 0;
 	return 1;
 }
 
 Clause operator|(const Clause &a, const Clause &b){
-	Clause c;
-	for(int i = 0; i < BLOCKS; ++i)
+	Clause c(std::max(a.n, b.n));
+	for(int i = 0; i < c.b; ++i)
 		c.data[i] = (a.data[i] | b.data[i]);
 	return c;
 }
@@ -87,7 +81,7 @@ Clause resolve(const Clause &a, const Clause &b, int v){
 std::ostream& operator<<(std::ostream &out, const Clause &c){
 	bool st = 1;
 	out << "(";
-	for(int i = 1; i < VARCOUNT; ++i){
+	for(int i = 1; i <= c.n; ++i){
 		if(c.has(i)){
 			if(!st) out << " v ";
 			st = 0;
