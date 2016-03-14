@@ -16,6 +16,12 @@ public:
 			assert(scanf("%[^\n] ", buff) == 1);
 		}while(buff[0] == 'c');
 		assert(sscanf(buff, "p cnf %d %d", &n, &m) == 2);
+
+		if(n > Clause::MAX_VARIABLES()){
+			std::cerr << "Too many variables\n";
+			exit(1);
+		}
+
 		for(int i = 0; i < m; ++i){
 			Clause clause;
 			for(;;){

@@ -4,7 +4,7 @@
 #include <bitset>
 #include <iostream>
 
-const int VARCOUNT = 50;
+const int VARCOUNT = 250;
 const int BLOCKS = (2*VARCOUNT + 63) / 64;
 
 typedef unsigned long long block_type;
@@ -17,6 +17,9 @@ int var(int v){
 
 class Clause {
 public:
+	static int MAX_VARIABLES() {
+		return VARCOUNT;
+	}
 	block_type data[BLOCKS];
 	Clause(){
 		for(int i = 0; i < BLOCKS; ++i)
