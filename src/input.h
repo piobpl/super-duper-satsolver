@@ -1,3 +1,5 @@
+/* Copyright 2016 Authors */
+
 #ifndef SRC_INPUT_H_
 #define SRC_INPUT_H_
 

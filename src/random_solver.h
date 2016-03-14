@@ -1,3 +1,5 @@
+/* Copyright 2016 Authors */
+
 #ifndef SRC_RANDOM_SOLVER_H_
 #define SRC_RANDOM_SOLVER_H_
 

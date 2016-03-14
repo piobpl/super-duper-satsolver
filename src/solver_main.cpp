@@ -1,3 +1,5 @@
+/* Copyright 2016 Authors */
+
 #include <algorithm>
 #include <deque>
 #include <iostream>

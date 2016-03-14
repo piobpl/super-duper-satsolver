@@ -1,3 +1,5 @@
+/* Copyright 2016 Authors */
+
 #ifndef SRC_CLAUSE_H_
 #define SRC_CLAUSE_H_
 
@@ -17,31 +19,39 @@ class Clause {
  public:
   int n, b;
   std::vector<BLOCK> data;
+
   Clause() {}
+
   explicit Clause(int _n) : n(_n), b((n + 63)/64), data(b) {}
+
   Clause(const Clause &o) {
     data = o.data;
   }
+
   bool empty() const {
     for (int i = 0; i < b; ++i)
       if (data[i])
         return 0;
     return 1;
   }
+
   bool trivial() const {
     for (int i = 0; i < b; ++i)
       if (data[i] & (data[i] >> 1))
         return 1;
     return 0;
   }
+
   bool has(int v) const {
     v = var(v);
     return data[v / 64] & (1ULL << (v % 64));
   }
+
   void add(int v) {
     v = var(v);
     data[v / 64] |= (1ULL << (v % 64));
   }
+
   void remove(int v) {
     v = var(v);
     data[v / 64] &= ~(1ULL << (v % 64));

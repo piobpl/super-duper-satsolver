@@ -7,6 +7,7 @@ SOURCES=$(filter-out $(wildcard src/*_main.cpp),$(wildcard src/*.cpp))
 OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS) 
+	./cpplint.py src/*
 	@mkdir -p bin
 	$(CC) $(CXXFLAGS) -o bin/$@ $<
 
