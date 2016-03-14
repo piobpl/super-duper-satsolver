@@ -2,17 +2,18 @@
 CC=g++
 CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static
 
-SRC=$(wildcard src/*.cpp)
-OBJ=$(patsubst src/%.cpp,obj/%.o,$(SRC))
+TARGETS=$(patsubst src/%_main.cpp,%,$(wildcard src/*.cpp))
+SOURCES=$(filter-out $(wildcard src/*_main.cpp),$(wildcard src/*.cpp))
+OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 
-bin/main: $(OBJ)
-	mkdir -p bin
-	$(CC) $(CXXFLAGS) -o $@ $(OBJ)
+$(TARGETS): % : src/%_main.cpp $(OBJECTS) 
+	@mkdir -p bin
+	$(CC) $(CXXFLAGS) -o bin/$@ $<
 
-$(OBJ): obj/%.o: src/%.cpp
+$(OBJECTS): obj/%.o : src/%.cpp
 	mkdir -p obj
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f obj/*.o
-	rm -f bin/main
+	rm -f $(OBJECTS)
+	rm -f $(patsubst %,bin/%,$(TARGETS))
