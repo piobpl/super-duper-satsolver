@@ -30,3 +30,6 @@ bin/
 
 # Tests
 tests/
+
+# Scripts
+cpplint.py

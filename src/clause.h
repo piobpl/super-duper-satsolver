@@ -22,24 +22,10 @@ class Clause {
 
   Clause() {}
 
-  explicit Clause(int _n) : n(_n), b((n + 63)/64), data(b) {}
+  explicit Clause(int _n) : n(_n), b((2*n + 63)/64), data(b) {}
 
   Clause(const Clause &o) {
     data = o.data;
-  }
-
-  bool empty() const {
-    for (int i = 0; i < b; ++i)
-      if (data[i])
-        return 0;
-    return 1;
-  }
-
-  bool trivial() const {
-    for (int i = 0; i < b; ++i)
-      if (data[i] & (data[i] >> 1))
-        return 1;
-    return 0;
   }
 
   bool has(int v) const {
@@ -55,6 +41,20 @@ class Clause {
   void remove(int v) {
     v = var(v);
     data[v / 64] &= ~(1ULL << (v % 64));
+  }
+
+  bool empty() const {
+    for (int i = 0; i < b; ++i)
+      if (data[i])
+        return 0;
+    return 1;
+  }
+
+  bool trivial() const {
+    for (int i = 0; i < b; ++i)
+      if (data[i] & (data[i] >> 1))
+        return 1;
+    return 0;
   }
 };
 
