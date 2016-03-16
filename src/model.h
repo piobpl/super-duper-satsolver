@@ -43,7 +43,7 @@ class Model {
     used.resize(n+1);
   }
 
-  bool satisifed(const Clause &c) const {
+  bool satisfied(const Clause &c) const {
     for (int i = 1; i <= n; ++i)
       if (used[i])
         if (c.has(data[i] ? i : -i))

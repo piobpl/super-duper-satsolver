@@ -16,7 +16,7 @@ std::vector<Clause> clauses;
 Model model;
 
 bool unsatisfiable(const Clause &clause) {
-  return !model.satisifed(clause);
+  return !model.satisfied(clause);
 }
 
 int verify() {

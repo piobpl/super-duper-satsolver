@@ -55,7 +55,7 @@ class RandomSolver : public Solver {
       if (cnt == limit) return;
 
       int c = order[p];
-      if (model.satisifed(clauses[c])) {
+      if (model.satisfied(clauses[c])) {
         ++p;
       } else {
         order.erase(order.begin() + p);
