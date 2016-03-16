@@ -1,6 +1,7 @@
 /* Copyright 2016 Authors */
 
 #include <algorithm>
+#include <cstdio>
 #include <deque>
 #include <iostream>
 #include <vector>
@@ -13,7 +14,7 @@ int n;
 std::vector<Clause> clauses;
 
 int main() {
-    Input::read(&n, &clauses);
+    Input::read(stdin, &n, &clauses);
 
     RandomSolver solver(10000);
 

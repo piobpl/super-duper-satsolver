@@ -4,6 +4,7 @@
 #define SRC_INPUT_H_
 
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 
@@ -11,11 +12,11 @@
 
 class Input {
  public:
-  static void read(int *n, std::vector<Clause> *clauses) {
+  static void read(FILE* file, int *n, std::vector<Clause> *clauses) {
     int m;
     char buff[4096];
     do {
-      assert(scanf("%[^\n] ", buff) == 1);
+      assert(fscanf(file, "%[^\n] ", buff) == 1);
     }while (buff[0] == 'c');
     assert(sscanf(buff, "p cnf %d %d", n, &m) == 2);
 
@@ -23,7 +24,7 @@ class Input {
       Clause clause(*n);
       for (;;) {
         int v;
-        assert(scanf("%d", &v) == 1);
+        assert(fscanf(file, "%d", &v) == 1);
         if (v == 0) break;
         clause.add(v);
       }
