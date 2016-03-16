@@ -24,8 +24,8 @@ int verify() {
   Output::read(ansfile, n, &model);
   auto unsatisfiedCount =
     std::count_if(clauses.begin(), clauses.end(), unsatisfiable);
-    std::cerr << unsatisfiedCount << " unsatisfied clauses\n";
   if (unsatisfiedCount > 0) {
+    std::cerr << unsatisfiedCount << " unsatisfied clauses\n";
     return -1;
   }
   return 0;

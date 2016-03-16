@@ -19,7 +19,6 @@ class Output {
        assert(fscanf(file, "%d ", &v) == 1);
        model->set(i, v);
     }
-    std::cerr << "Got " << n << " values\n";
   }
 };
 

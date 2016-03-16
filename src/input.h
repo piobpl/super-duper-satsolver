@@ -32,8 +32,6 @@ class Input {
         clauses->push_back(clause);
     }
     m = static_cast<int>(clauses->size());
-    std::cerr << "Got " << *n << " variables and "
-      << m << " non-trivial clauses\n";
   }
 };
 
