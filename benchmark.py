@@ -29,7 +29,7 @@ def run_test(exe, wejp):
 		proc.kill()
 		os.close(wej)
 		os.close(wyj)
-		return "TLE", 2
+		return "TLE", 2, ""
 	used_time = getrusage(RUSAGE_CHILDREN).ru_utime - used_time
 	os.close(wej)
 	os.close(wyj)
