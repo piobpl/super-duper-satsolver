@@ -12,17 +12,18 @@ SOURCES=$(filter-out $(MAINSOURCES) $(TESTSOURCES),$(ALLSOURCES))
 OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
-$(TARGETS): % : src/%_main.cpp $(OBJECTS) 
+$(TARGETS): % : src/%_main.cpp $(OBJECTS)
 	./cpplint.py src/*
 	@mkdir -p bin
-	$(CC) $(CXXFLAGS) -o bin/$@ $<
+	$(CC) $(CXXFLAGS) -o bin/$@ $^
 
 $(OBJECTS) $(TESTS): obj/%.o : src/%.cpp
 	mkdir -p obj
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 tester:	$(OBJECTS) $(TESTS)
-	$(CC) $(CXXFLAGS) -o bin/$@ $< -lgtest -lgtest_main -pthread
+	./cpplint.py src/*
+	$(CC) $(CXXFLAGS) -o bin/$@ $^ -lgtest -lgtest_main -pthread
 
 test: tester
 	./bin/tester

@@ -55,7 +55,7 @@ class Model {
     for (int i = 1; i <= n; ++i)
       if (used[i]) {
         if (c.has(data[i] ? i : -i))
-          return 1;
+          return 0;
       } else if (c.has(i) || c.has(-i)) {
         return 0;
       }
