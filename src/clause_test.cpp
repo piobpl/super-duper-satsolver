@@ -33,4 +33,26 @@ TEST(ClauseTest, ClauseManipulation) {
 
     ASSERT_TRUE(c.empty());
   }
+
+  c.add(3);
+  c.add(-7);
+  c.add(13);
+
+  int i = 0;
+  for (int v : c) {
+    if (i == 0) ASSERT_EQ(3, v);
+    if (i == 1) ASSERT_EQ(13, v);
+    if (i == 2) ASSERT_EQ(-7, v);
+    ++i;
+  }
+  ASSERT_EQ(i, 3);
+
+  c.remove(3);
+  c.remove(13);
+  i = 0;
+  for (int v : c) {
+    if (i == 0) ASSERT_EQ(-7, v);
+    ++i;
+  }
+  ASSERT_EQ(i, 1);
 }

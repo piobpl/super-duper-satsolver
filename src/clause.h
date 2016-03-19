@@ -5,61 +5,98 @@
 
 #include <algorithm>
 #include <iostream>
-#include <vector>
 
-typedef uint64_t BLOCK;
+#include "boost/dynamic_bitset.hpp"
 
-int var(int v);
+#define VAR(v) (v > 0 ? 2*v - 2 : -2*v - 1)
 
 class Clause {
+  typedef boost::dynamic_bitset<>::size_type size_type;
+
+  static const size_type npos = boost::dynamic_bitset<>::npos;
+
+  boost::dynamic_bitset<> pos, neg;
+
  public:
-  int n, b;
-  std::vector<BLOCK> data;
+  class Iterator {
+    const Clause *c;
+    bool pos;
+    size_type i;
+
+   public:
+    Iterator(const Clause *_c, bool _pos, size_type _i)
+       : c(_c), pos(_pos), i(_i) {}
+
+    bool operator!=(const Iterator& other) const {
+      return pos != other.pos || i != other.i;
+    }
+
+    int operator*() const {
+      return pos ? static_cast<int>(i) + 1 : -static_cast<int>(i) - 1;
+    }
+
+    const Iterator& operator++() {
+      if (pos) {
+        i = c->pos.find_next(i);
+        if (i == npos) {
+          pos = 0;
+          i = c->neg.find_first();
+        }
+      } else {
+        i = c->neg.find_next(i);
+      }
+      return *this;
+    }
+  };
 
   Clause() {}
 
-  explicit Clause(int _n) : n(_n), b((2*n + 63)/64), data(b) {}
-
-  Clause(const Clause &o) {
-    data = o.data;
-  }
+  explicit Clause(int maxvar) : pos(maxvar), neg(maxvar) {}
 
   bool has(int v) const {
-    v = var(v);
-    return data[v / 64] & (1ULL << (v % 64));
+    if (v > 0) return pos.test(v-1);
+    return neg.test(-v-1);
   }
 
   void add(int v) {
-    v = var(v);
-    data[v / 64] |= (1ULL << (v % 64));
+    if (v > 0)
+      pos.set(v-1);
+    else
+      neg.set(-v-1);
   }
 
   void remove(int v) {
-    v = var(v);
-    data[v / 64] &= ~(1ULL << (v % 64));
+    if
+      (v > 0) pos.reset(v-1);
+    else
+      neg.reset(-v-1);
+  }
+
+  Iterator begin() const {
+    size_type i = pos.find_first();
+    if (i == npos) return Iterator(this, 0, neg.find_first());
+    return Iterator(this, 1, i);
+  }
+
+  Iterator end() const {
+    return Iterator(this, 0, npos);
   }
 
   bool empty() const {
-    for (int i = 0; i < b; ++i)
-      if (data[i])
-        return 0;
-    return 1;
+    return pos.none() && neg.none();
   }
 
   bool trivial() const {
-    for (int i = 0; i < b; ++i)
-      if (data[i] & (data[i] >> 1))
-        return 1;
-    return 0;
+    return (pos | neg).any();
   }
+
+  friend bool operator<(const Clause &a, const Clause &b);
+
+  friend bool operator==(const Clause &a, const Clause &b);
+
+  friend Clause operator|(const Clause &a, const Clause &b);
+
+  friend std::ostream& operator<<(std::ostream &out, const Clause &c);
 };
-
-bool operator<(const Clause &a, const Clause &b);
-
-bool operator==(const Clause &a, const Clause &b);
-
-Clause operator|(const Clause &a, const Clause &b);
-
-std::ostream& operator<<(std::ostream &out, const Clause &c);
 
 #endif  // SRC_CLAUSE_H_

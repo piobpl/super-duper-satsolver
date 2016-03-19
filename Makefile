@@ -13,7 +13,6 @@ OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS)
-	./cpplint.py src/*
 	@mkdir -p bin
 	$(CC) $(CXXFLAGS) -o bin/$@ $^
 
@@ -22,8 +21,10 @@ $(OBJECTS) $(TESTS): obj/%.o : src/%.cpp
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 tester:	$(OBJECTS) $(TESTS)
-	./cpplint.py src/*
 	$(CC) $(CXXFLAGS) -o bin/$@ $^ -lgtest -lgtest_main -pthread
+
+lint:
+	./cpplint.py src/*
 
 test: tester
 	./bin/tester
@@ -42,4 +43,4 @@ debugmake:
 	@echo "OBJECTS:" $(OBJECTS)
 	@echo "TESTS:" $(TESTS)
 
-.PHONY: test clean debugmake
+.PHONY: lint test clean debugmake

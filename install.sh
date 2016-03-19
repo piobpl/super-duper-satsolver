@@ -11,3 +11,6 @@ cd /usr/src/gtest
 sudo cmake CMakeLists.txt
 sudo make
 sudo cp *.a /usr/lib
+
+# boost
+sudo apt-get install libboost-all-dev
