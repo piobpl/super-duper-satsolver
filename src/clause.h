@@ -97,7 +97,7 @@ class Clause {
   }
 
   bool trivial() const {
-    return (pos | neg).any();
+    return (pos & neg).any();
   }
 
   friend bool operator<(const Clause &a, const Clause &b);
