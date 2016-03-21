@@ -11,15 +11,9 @@
 #include "boost/container/vector.hpp"
 
 class Model {
-  typedef boost::dynamic_bitset<>::size_type size_type;
-
   struct Recall {
-    enum {
-      UNSET,
-      TRUE,
-      FALSE
-    } cmd;
-    int v;
+    bool set, val;
+    int var;
   };
 
   int n;
@@ -27,18 +21,12 @@ class Model {
   boost::container::vector<Recall> history;
 
  public:
-  Model() : Model(0) {}
+  typedef boost::dynamic_bitset<>::size_type time_type;
 
   explicit Model(int _n) : n(_n), used(n+1), data(n+1) {}
 
   int size() const {
     return n;
-  }
-
-  void resize(int _n) {
-    n = _n;
-    used.resize(n+1);
-    data.resize(n+1);
   }
 
   bool isset(int x) const {
@@ -47,6 +35,7 @@ class Model {
   }
 
   void set(int x, bool v) {
+    history.push_back(Recall{isset(x), value(x), x});
     if (x < 0) {
       x = -x;
       v = !v;
@@ -56,24 +45,21 @@ class Model {
   }
 
   void unset(int x) {
+    history.push_back(Recall{isset(x), value(x), x});
     used[x] = 0;
   }
 
-  size_type time() {
+  time_type time() {
     return history.size();
   }
 
-  void load(size_type past) {
+  void recall(time_type past) {
     while (history.size() > past) {
       Recall r = history.back();
       history.pop_back();
 
-      if (r.cmd == Recall::UNSET)
-        unset(r.v);
-      else if (r.cmd == Recall::TRUE)
-        set(r.v, true);
-      else
-        set(r.v, false);
+      used[r.var] = r.set;
+      data[r.var] = r.val;
     }
   }
 
