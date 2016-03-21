@@ -6,10 +6,9 @@
 #include "../src/model.h"
 
 TEST(ModelTest, ModelManipulation) {
-  Model m;
-  ASSERT_EQ(m.size(), 0);
+  Model m(100);
+  Model::time_type start = m.time();
 
-  m.resize(100);
   ASSERT_EQ(m.size(), 100);
 
   for (int i = 1; i <= 100; ++i) {
@@ -28,31 +27,44 @@ TEST(ModelTest, ModelManipulation) {
     m.unset(i);
     ASSERT_FALSE(m.isset(i));
 
-    m.set(i, (i % 5) < 2);
+    if (i % 3 == 0) m.set(i, (i % 5) < 2);
   }
+  Model::time_type postinit = m.time();
 
   Clause c(100);
-  c.add(2);
+  c.add(3);
   c.add(-51);
   c.add(99);
 
   ASSERT_FALSE(m.satisfied(c));
   ASSERT_TRUE(m.spoiled(c));
 
-  c.add(-34);
+  c.add(-33);
   ASSERT_TRUE(m.satisfied(c));
   ASSERT_FALSE(m.spoiled(c));
 
-  c.remove(-34);
+  c.remove(-33);
   m.unset(51);
   ASSERT_FALSE(m.satisfied(c));
   ASSERT_FALSE(m.spoiled(c));
 
   m.set(51, 1);
-  m.clear();
   ASSERT_FALSE(m.satisfied(c));
-  ASSERT_FALSE(m.spoiled(c));
+  ASSERT_TRUE(m.spoiled(c));
 
+  m.recall(postinit);
+  for (int i = 1; i <= 100; ++i) {
+    SCOPED_TRACE(i);
+
+    if (i % 3 == 0) {
+      ASSERT_TRUE(m.isset(i));
+      ASSERT_EQ((i % 5) < 2, m.value(i));
+    } else {
+      ASSERT_FALSE(m.isset(i));
+    }
+  }
+
+  m.recall(start);
   for (int i = 1; i <= 100; ++i) {
     SCOPED_TRACE(i);
 

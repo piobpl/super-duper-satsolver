@@ -51,7 +51,8 @@ class Clause {
 
   explicit Clause(size_type maxvar) : pos(maxvar), neg(maxvar) {}
 
-  explicit Clause(size_type maxvar, std::initializer_list<int> vars) : Clause(maxvar) {
+  explicit Clause(size_type maxvar, std::initializer_list<int> vars)
+    : Clause(maxvar) {
     for (int v : vars) add(v);
   }
 
@@ -97,7 +98,7 @@ class Clause {
   }
 
   bool trivial() const {
-    return (pos | neg).any();
+    return (pos & neg).any();
   }
 
   friend bool operator<(const Clause &a, const Clause &b);
