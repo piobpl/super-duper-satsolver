@@ -49,13 +49,6 @@ TEST(ModelTest, ModelManipulation) {
   ASSERT_FALSE(m.spoiled(c));
 
   m.set(51, 1);
-  m.clear();
   ASSERT_FALSE(m.satisfied(c));
-  ASSERT_FALSE(m.spoiled(c));
-
-  for (int i = 1; i <= 100; ++i) {
-    SCOPED_TRACE(i);
-
-    ASSERT_FALSE(m.isset(i));
-  }
+  ASSERT_TRUE(m.spoiled(c));
 }
