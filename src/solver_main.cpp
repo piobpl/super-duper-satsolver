@@ -10,17 +10,17 @@
 #include "../src/input.h"
 #include "../src/random_solver.h"
 
-int n;
-std::vector<Clause> clauses;
-
 int main() {
-    Input::read(stdin, &n, &clauses);
+  int n;
+  std::vector<Clause> clauses;
 
-    RandomSolver solver(10000);
+  Input::read(stdin, &n, &clauses);
 
-    do {
-        solver.solve(n, clauses);
-    }while(!solver.success());
+  RandomSolver solver(10000);
 
-    std::cout << solver.solution() << std::endl;
+  do {
+    solver.solve(n, clauses);
+  }while(!solver.success());
+
+  std::cout << solver.solution() << std::endl;
 }

@@ -72,6 +72,10 @@ class Clause {
       neg.reset(-v-1);
   }
 
+  size_type size() const {
+    return pos.count() + neg.count();
+  }
+
   Iterator begin() const {
     size_type i = pos.find_first();
     if (i == npos) return Iterator(this, 0, neg.find_first());

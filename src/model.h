@@ -26,10 +26,15 @@ class Model {
   }
 
   bool isset(int x) const {
+    if (x < 0) x = -x;
     return used[x];
   }
 
   void set(int x, bool v) {
+    if (x < 0) {
+      x = -x;
+      v = !v;
+    }
     used[x] = 1;
     data[x] = v;
   }
