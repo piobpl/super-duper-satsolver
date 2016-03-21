@@ -66,6 +66,10 @@ class UnitPropagation {
     return failed;
   }
 
+  Model get_model() {
+    return model;
+  }
+
   bool propagate() {
     if (has_failed()) return false;
     while (!set_literals.empty()) {
