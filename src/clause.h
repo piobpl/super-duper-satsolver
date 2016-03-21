@@ -51,7 +51,8 @@ class Clause {
 
   explicit Clause(size_type maxvar) : pos(maxvar), neg(maxvar) {}
 
-  explicit Clause(size_type maxvar, std::initializer_list<int> vars) : Clause(maxvar) {
+  explicit Clause(size_type maxvar, std::initializer_list<int> vars)
+    : Clause(maxvar) {
     for (int v : vars) add(v);
   }
 

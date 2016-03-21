@@ -8,9 +8,23 @@
 
 #include "../src/clause.h"
 
+#include "boost/container/vector.hpp"
+
 class Model {
+  typedef boost::dynamic_bitset<>::size_type size_type;
+
+  struct Recall {
+    enum {
+      UNSET,
+      TRUE,
+      FALSE
+    } cmd;
+    int v;
+  };
+
   int n;
-  std::vector<bool> used, data;
+  boost::container::vector<bool> used, data;
+  boost::container::vector<Recall> history;
 
  public:
   Model() : Model(0) {}
@@ -45,9 +59,22 @@ class Model {
     used[x] = 0;
   }
 
-  void clear() {
-    used.clear();
-    used.resize(n+1);
+  size_type time() {
+    return history.size();
+  }
+
+  void load(size_type past) {
+    while (history.size() > past) {
+      Recall r = history.back();
+      history.pop_back();
+
+      if (r.cmd == Recall::UNSET)
+        unset(r.v);
+      else if (r.cmd == Recall::TRUE)
+        set(r.v, true);
+      else
+        set(r.v, false);
+    }
   }
 
   bool satisfied(const Clause &c) const {
