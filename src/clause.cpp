@@ -14,7 +14,7 @@ bool operator==(const Clause &a, const Clause &b) {
 }
 
 Clause operator|(const Clause &a, const Clause &b) {
-  Clause c;
+  Clause c(std::max(a.maximal_variable(), b.maximal_variable()));
   c.pos = a.pos | b.pos;
   c.neg = a.neg | b.neg;
   return c;

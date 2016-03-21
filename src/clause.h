@@ -49,9 +49,11 @@ class Clause {
     }
   };
 
-  Clause() {}
+  explicit Clause(size_type maxvar) : pos(maxvar), neg(maxvar) {}
 
-  explicit Clause(int maxvar) : pos(maxvar), neg(maxvar) {}
+  explicit Clause(size_type maxvar, std::initializer_list<int> vars) : Clause(maxvar) {
+    for (int v : vars) add(v);
+  }
 
   bool has(int v) const {
     if (v > 0) return pos.test(v-1);
@@ -74,6 +76,10 @@ class Clause {
 
   size_type size() const {
     return pos.count() + neg.count();
+  }
+
+  size_type maximal_variable() const {
+    return pos.size();
   }
 
   Iterator begin() const {

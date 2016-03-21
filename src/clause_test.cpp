@@ -55,4 +55,10 @@ TEST(ClauseTest, ClauseManipulation) {
     ++i;
   }
   ASSERT_EQ(i, 1);
+
+  Clause d(9, {1, -5, 7});
+  ASSERT_TRUE(d.has(-5));
+  ASSERT_TRUE(d.has(7));
+  ASSERT_TRUE(d.has(1));
+  ASSERT_FALSE(d.has(2));
 }
