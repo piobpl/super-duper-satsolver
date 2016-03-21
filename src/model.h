@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 
+#include "../src/clause.h"
+
 class Model {
   int n;
   std::vector<bool> used, data;
@@ -72,11 +74,6 @@ class Model {
   }
 };
 
-std::ostream& operator<<(std::ostream &out, const Model &m) {
-  for (int i = 1; i < m.size(); ++i)
-    out << m.value(i) << " ";
-  out << m.value(m.size());
-  return out;
-}
+std::ostream& operator<<(std::ostream &out, const Model &m);
 
 #endif  // SRC_MODEL_H_
