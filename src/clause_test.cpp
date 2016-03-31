@@ -6,6 +6,8 @@
 
 TEST(ClauseTest, ClauseManipulation) {
   Clause c(100);
+  ASSERT_EQ(100, c.maximal_variable());
+
   for (int i = 1; i <= 100; ++i) {
     SCOPED_TRACE(i);
 

@@ -27,10 +27,11 @@ TEST(UnitPropagatorTest, AddFailedClause) {
 }
 
 TEST(UnitPropagatorTest, SuccessfulPropagator) {
-  int max_var = 3;
+  int max_var = 4;
   UnitPropagator unit_propagator(max_var);
   std::vector<Clause> clauses = {
     Clause(max_var, {1, 2, 3}),
+    Clause(max_var, {1, -2, 3, -4}),
     Clause(max_var, {-1}),
     Clause(max_var, {1, -3})
   };
@@ -44,6 +45,8 @@ TEST(UnitPropagatorTest, SuccessfulPropagator) {
   ASSERT_TRUE(model.value(2));
   ASSERT_TRUE(model.isset(3));
   ASSERT_FALSE(model.value(3));
+  ASSERT_TRUE(model.isset(4));
+  ASSERT_FALSE(model.value(4));
 }
 
 TEST(UnitPropagatorTest, FailedPropagator) {

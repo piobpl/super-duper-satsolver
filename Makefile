@@ -1,6 +1,6 @@
 
 CC=g++
-CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -static
+CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static
 
 ALLSOURCES=$(wildcard src/*.cpp)
 
@@ -29,14 +29,16 @@ lint:
 test: tester
 	./bin/tester
 
-coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
+coverage: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
+	    -O0 -fprofile-arcs -ftest-coverage -static 
 coverage: clean test
 	mkdir -p coverage
 	rm -f coverage/*
-	./scripts/gcovr.py -r . --object-directory=./obj --html --html-details -o coverage/report.html
+	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
+	    --html --html-details -o coverage/report.html
+	make clean
 
-benchmark: CXXFLAGS += -O2
-benchmark: clean solver verifier
+benchmark: solver verifier
 	./scripts/benchmark.py ./bin/solver
 
 clean:
