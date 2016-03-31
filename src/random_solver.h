@@ -31,14 +31,14 @@ class RandomSolver : public Solver {
  public:
   RandomSolver() : RandomSolver(-1) {}
 
-  explicit RandomSolver(int _limit) : e(r()), u(0, 1), limit(_limit) {}
+  explicit RandomSolver(int lim) : e(r()), u(0, 1), model(0), limit(lim) {}
 
   void solve(int _n, std::vector<Clause> _clauses) override {
     n = _n;
     clauses = _clauses;
+    model = Model(n);
     int m = static_cast<int>(clauses.size());
 
-    model.resize(n);
     solved = 0;
 
     for (int i = 1; i <= n; ++i)

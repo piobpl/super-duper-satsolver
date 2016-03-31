@@ -1,6 +1,6 @@
 
 CC=g++
-CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static
+CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -static
 
 ALLSOURCES=$(wildcard src/*.cpp)
 
@@ -21,16 +21,26 @@ $(OBJECTS) $(TESTS): obj/%.o : src/%.cpp
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 tester:	$(OBJECTS) $(TESTS)
-	$(CC) $(CXXFLAGS) -o bin/$@ $^ -lgtest -lgtest_main -pthread
+	$(CC) $(CXXFLAGS) -o bin/$@ $^ -lgtest -lgcov -lgtest_main -pthread
 
 lint:
-	./cpplint.py src/*
+	./scripts/cpplint.py src/*
 
 test: tester
 	./bin/tester
 
+coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
+coverage: clean test
+	mkdir -p coverage
+	rm -f coverage/*
+	./scripts/gcovr.py -r . --object-directory=./obj --html --html-details -o coverage/report.html
+
+benchmark: CXXFLAGS += -O2
+benchmark: clean solver verifier
+	./scripts/benchmark.py ./bin/solver
+
 clean:
-	rm -f $(OBJECTS) $(TESTS)
+	rm -f obj/*
 	rm -f $(patsubst %,bin/%,$(TARGETS) tester)
 
 debugmake:
@@ -43,4 +53,6 @@ debugmake:
 	@echo "OBJECTS:" $(OBJECTS)
 	@echo "TESTS:" $(TESTS)
 
-.PHONY: lint test clean debugmake
+all: lint test $(TARGETS)
+
+.PHONY: lint test coverage benchmark clean debugmake all

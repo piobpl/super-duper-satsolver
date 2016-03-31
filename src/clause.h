@@ -19,13 +19,17 @@ class Clause {
 
  public:
   class Iterator {
+   public:
     const Clause *c;
     bool pos;
     size_type i;
 
-   public:
     Iterator(const Clause *_c, bool _pos, size_type _i)
        : c(_c), pos(_pos), i(_i) {}
+
+    bool operator==(const Iterator& other) const {
+      return pos == other.pos && i == other.i;
+    }
 
     bool operator!=(const Iterator& other) const {
       return pos != other.pos || i != other.i;
@@ -33,6 +37,10 @@ class Clause {
 
     int operator*() const {
       return pos ? static_cast<int>(i) + 1 : -static_cast<int>(i) - 1;
+    }
+
+    bool end() {
+      return *this == c->end();
     }
 
     const Iterator& operator++() {
@@ -75,7 +83,7 @@ class Clause {
       neg.reset(-v-1);
   }
 
-  size_type size() const {
+  size_type count() const {
     return pos.count() + neg.count();
   }
 

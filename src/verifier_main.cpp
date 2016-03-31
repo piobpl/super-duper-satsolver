@@ -27,7 +27,6 @@ int main(int argc, char *argv[]) {
 
   int n;
   std::vector<Clause> clauses;
-  Model model;
 
   if (argc == 2) {
     testfile = fopen(argv[1], "r");
@@ -41,6 +40,8 @@ int main(int argc, char *argv[]) {
   }
 
   Input::read(testfile, &n, &clauses);
+
+  Model model(n);
   Output::read(ansfile, n, &model);
 
   int exitCode = verify(model, clauses);

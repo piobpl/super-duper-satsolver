@@ -56,6 +56,22 @@ TEST(ClauseTest, ClauseManipulation) {
   }
   ASSERT_EQ(i, 1);
 
+  c.remove(-7);
+  c.add(-1);
+  c.add(3);
+  c.add(-2);
+  Clause::Iterator it = c.begin();
+  ASSERT_FALSE(it.end());
+  ASSERT_EQ(3, *it);
+  ++it;
+  ASSERT_FALSE(it.end());
+  ASSERT_EQ(-1, *it);
+  ++it;
+  ASSERT_FALSE(it.end());
+  ASSERT_EQ(-2, *it);
+  ++it;
+  ASSERT_TRUE(it.end());
+
   Clause d(9, {1, -5, 7});
   ASSERT_TRUE(d.has(-5));
   ASSERT_TRUE(d.has(7));
