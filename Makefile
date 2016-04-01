@@ -13,6 +13,7 @@ OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS)
+	touch src/solver_type.h
 	@mkdir -p bin
 	$(CC) $(CXXFLAGS) -o bin/$@ $^
 

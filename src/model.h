@@ -81,6 +81,26 @@ class Model {
       }
     return 1;
   }
+  
+  bool ambivalent(const Clause& c, int& vitness){
+    if(satisfied(c)){
+      return false;
+    }
+    else{
+      vitness=-1;
+      for(int i=1; i<=n; ++i){
+        if(!used[i]){
+          vitness = i;
+          break;
+        }
+      }
+      if(vitness==-1){
+        std::cerr << "vitness normalnie powinien sie znalezc. model.h";
+        return false;
+      }
+	  return true;
+    }
+  }
 
   bool value(int x) const {
     return data[x];

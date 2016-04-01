@@ -26,6 +26,7 @@ class UnitPropagator {
   }
 
  public:
+   
   explicit UnitPropagator(int _max_var)
       : failed(0),
         max_var(_max_var),
@@ -42,7 +43,7 @@ class UnitPropagator {
     return failed;
   }
 
-  Model get_model() {
+  Model& get_model() {
     return model;
   }
 
