@@ -37,8 +37,8 @@ void UnitPropagator::add_clause(const Clause &clause) {
   observed(*nd).push_back(c);
 }
 
-void UnitPropagator::propagate() {
-  if (failed) return;
+bool UnitPropagator::propagate() {
+  if (failed) return false;;
   while (!propagation_queue.empty()) {
     int L = propagation_queue.front();
     propagation_queue.pop();
@@ -56,12 +56,12 @@ void UnitPropagator::propagate() {
         observed(*obs[c][1]).push_back(c);
       } else if (model.isset(NL) && !model.value(NL)) {
         failed = true;
-        return;
+        return false;
       } else if (!model.isset(NL)) {
         model.set(NL, true);
         propagation_queue.push(NL);
       }
     }
   }
-  return;
+  return true;
 }

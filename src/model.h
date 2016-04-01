@@ -82,24 +82,32 @@ class Model {
     return 1;
   }
   
-  bool ambivalent(const Clause& c, int& vitness){
+  bool ambivalent(const Clause& c, int* vitness){
     if(satisfied(c)){
       return false;
     }
     else{
-      vitness=-1;
+      (*vitness)=-1;
       for(int i=1; i<=n; ++i){
         if(!used[i]){
-          vitness = i;
+          (*vitness) = i;
           break;
         }
       }
-      if(vitness==-1){
-        std::cerr << "vitness normalnie powinien sie znalezc. model.h";
+      if((*vitness)==-1){
         return false;
       }
 	  return true;
     }
+  }
+  
+  bool all_assigned(){
+    for(int i=1; i<=n; ++i){
+      if(!used[i]){
+        return false;
+      }
+    }
+    return true;
   }
 
   bool value(int x) const {

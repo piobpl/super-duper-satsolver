@@ -14,15 +14,13 @@
 
 class GraspSolver : public Solver {
   int n;
-  std::vector<int> decision_vars;
-  std::vector<Clause> clauses;
   UnitPropagator up = UnitPropagator(0);
-  std::vector<std::vector<int> > rev_graph;
+  std::vector<Clause> clauses;
   bool solved;
   
   //returns true if all clauses are satisfied. 
   //otherwise returns false and sets one variable to some value
-  bool decide(){
+  bool decide(int dl){
     Model& model = up.get_model();
     if(std::all_of(clauses.begin(), clauses.end(), 
         [&model](Clause& c){return model.satisfied(c);})){
@@ -30,73 +28,62 @@ class GraspSolver : public Solver {
     }
     auto cend = clauses.end(); 
     for(auto it = clauses.begin(); it != cend; ++it){
-    int witness;
-    if(model.ambivalent(*it, witness)){
-      if((*it).has(witness)){
-        model.set(witness, true);
-      }
-      else if((*it).has(-witness)){
-        model.set(witness, false);
-      }
-      else{
-        std::cerr << "cos poszlo nie tak"; 
-        exit(-1);
-      }
-      return false;
-    }
-  }
-//jesli jestesmy tutaj to znaczy, ze zdanie jest na pewno niespelnione
-//przez biezace wartosciowanie
-  return false;
-}
-  
-  //dl - decision level, bac_dl - backtracking decision level 
-  //when dl = bac_dl - we stop bactrack
-  bool diagnose(int dl, int* bac_dl){
-	  
-  }
-  
-  void erase() {}
-  
-  //dl - decision level, bac_dl - backtracking decision level
-  bool search(int dl, int* bac_dl){
-    if(decide()){
-      return true;
-    }
-    while(true){
-      //no conflict if(up.propagate)
-      up.propagate();
-      if(true){
-        if(search(dl+1, bac_dl)){
-          return true;
+      int witness;
+      if(model.ambivalent(*it, &witness)){
+        if((*it).has(witness)){
+		  up.notice(witness, true, dl);
         }
-        else if(dl!=(*bac_dl)){
-          erase();
-          return false;
+        else if((*it).has(-witness)){
+		  up.notice(witness, false, dl);
         }
-      }
-//it was conflict or we have bactracked a few levels
-      if(!diagnose(dl, bac_dl)){
-        erase();
+        else{
+          std::cerr << "cos poszlo nie tak"; 
+          exit(-1);
+        }
         return false;
       }
-      erase();
     }
+//jesli jestesmy tutaj to znaczy, ze zdanie jest na pewno niespelnione
+//przez biezace wartosciowanie
+    return false;
   }
+  
+  
 
  public:
+ 
   GraspSolver(int _n): up(_n) {}
 
   void solve(int _n, std::vector<Clause> _clauses) override {
     n = _n;
-    clauses = _clauses;
-    rev_graph.resize(n);
+    clauses = _clauses;  
+    up.add_clauses(clauses);
+    Model& model = up.get_model();
     
-    auto cend = clauses.end();
-    for(auto it = clauses.begin(); it != cend; ++it){
-		up.add_clause(*it);
+    if(!up.propagate()){
+		solved = false;
+		return;
 	}
-	solved = search(0,0);
+	//decision level
+	int dl = 0;
+	/*due to Marques Silva - for future features 
+	 * check should be done in this way*/
+	while(!model.all_assigned()){
+	    decide(dl);
+	    dl++;
+	    if(up.propagate()){
+	      int beta = up.diagnose();
+	      if( beta < 0 ){
+	        solved = false;
+	        return;
+        }
+        else{
+          up.backtrack();
+          dl = beta;
+          }
+      }
+    }
+    solved = true;
   }
 
   bool success() override {
