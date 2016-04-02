@@ -14,18 +14,18 @@ TEST(ModelTest, ModelManipulation) {
   for (int i = 1; i <= 100; ++i) {
     SCOPED_TRACE(i);
 
-    ASSERT_FALSE(m.isset(i));
+    ASSERT_FALSE(m.is_set(i));
 
     m.set(i, 0);
-    ASSERT_TRUE(m.isset(i));
+    ASSERT_TRUE(m.is_set(i));
     ASSERT_FALSE(m.value(i));
 
     m.set(i, 1);
-    ASSERT_TRUE(m.isset(i));
+    ASSERT_TRUE(m.is_set(i));
     ASSERT_TRUE(m.value(i));
 
     m.unset(i);
-    ASSERT_FALSE(m.isset(i));
+    ASSERT_FALSE(m.is_set(i));
 
     if (i % 3 == 0) m.set(i, (i % 5) < 2);
   }
@@ -57,10 +57,10 @@ TEST(ModelTest, ModelManipulation) {
     SCOPED_TRACE(i);
 
     if (i % 3 == 0) {
-      ASSERT_TRUE(m.isset(i));
+      ASSERT_TRUE(m.is_set(i));
       ASSERT_EQ((i % 5) < 2, m.value(i));
     } else {
-      ASSERT_FALSE(m.isset(i));
+      ASSERT_FALSE(m.is_set(i));
     }
   }
 
@@ -68,6 +68,6 @@ TEST(ModelTest, ModelManipulation) {
   for (int i = 1; i <= 100; ++i) {
     SCOPED_TRACE(i);
 
-    ASSERT_FALSE(m.isset(i));
+    ASSERT_FALSE(m.is_set(i));
   }
 }

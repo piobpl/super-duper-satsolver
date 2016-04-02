@@ -69,11 +69,11 @@ class Clause {
     return neg.test(-v-1);
   }
 
-  bool ispos(int v) {
+  bool is_pos(int v) {
     return pos.test(v-1);
   }
 
-  bool isneg(int v) {
+  bool is_neg(int v) {
     return neg.test(-v-1);
   }
 
@@ -85,8 +85,8 @@ class Clause {
   }
 
   void remove(int v) {
-    if
-      (v > 0) pos.reset(v-1);
+    if (v > 0)
+      pos.reset(v-1);
     else
       neg.reset(-v-1);
   }

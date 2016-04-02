@@ -60,7 +60,7 @@ class UnitPropagator {
     level[var] = dec_level;
   }
 
-  void backtrack(int lvl) {
+  void recall(int lvl) {
     for (int i = 1; i <= variables; ++i) {
       if (level[i] != -1 && level[i] >= lvl) {
         model.unset(i);

@@ -39,13 +39,13 @@ TEST(UnitPropagatorTest, SuccessfulPropagator) {
   unit_propagator.propagate();
   ASSERT_FALSE(unit_propagator.has_failed());
   Model model = unit_propagator.get_model();
-  ASSERT_TRUE(model.isset(1));
+  ASSERT_TRUE(model.is_set(1));
   ASSERT_FALSE(model.value(1));
-  ASSERT_TRUE(model.isset(2));
+  ASSERT_TRUE(model.is_set(2));
   ASSERT_TRUE(model.value(2));
-  ASSERT_TRUE(model.isset(3));
+  ASSERT_TRUE(model.is_set(3));
   ASSERT_FALSE(model.value(3));
-  ASSERT_TRUE(model.isset(4));
+  ASSERT_TRUE(model.is_set(4));
   ASSERT_FALSE(model.value(4));
 }
 

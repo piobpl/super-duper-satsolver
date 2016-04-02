@@ -12,7 +12,7 @@ void UnitPropagator::add_clause(const Clause &clause) {
 
   Clause::Iterator st = clauses[c].begin();
   while (!st.end()) {
-    if (!model.isset(*st) || model.value(*st)) break;
+    if (!model.is_set(*st) || model.value(*st)) break;
     ++st;
   }
   if (st.end()) {
@@ -24,11 +24,11 @@ void UnitPropagator::add_clause(const Clause &clause) {
   Clause::Iterator nd = st;
   ++nd;
   while (!nd.end()) {
-    if (!model.isset(*nd) || model.value(*nd)) break;
+    if (!model.is_set(*nd) || model.value(*nd)) break;
     ++nd;
   }
   if (nd.end()) {
-    if (!model.isset(*st)) {
+    if (!model.is_set(*st)) {
       model.set(*st, true);
       propagation_queue.push(*st);
     }
@@ -52,16 +52,16 @@ bool UnitPropagator::propagate() {
       }
       ++obs[c][1];
       while (!obs[c][1].end()) {
-        if (!model.isset(*obs[c][1]) || model.value(*obs[c][1])) break;
+        if (!model.is_set(*obs[c][1]) || model.value(*obs[c][1])) break;
         ++obs[c][1];
       }
       int NL = *obs[c][0];
       if (!obs[c][1].end()) {
         observed(*obs[c][1]).push_back(c);
-      } else if (model.isset(NL) && !model.value(NL)) {
+      } else if (model.is_set(NL) && !model.value(NL)) {
         failed = true;
         return false;
-      } else if (!model.isset(NL)) {
+      } else if (!model.is_set(NL)) {
         model.set(NL, true);
         propagation_queue.push(NL);
       }
@@ -83,12 +83,12 @@ int UnitPropagator::diagnose() {
     std::queue<int> mov_back;
     int k;
     while ((k=find_nonroot_var(clause)) != -1) {
-      bool pos = clause.ispos(k);
+      bool pos = clause.is_pos(k);
       clause.remove(k);
       for (int i = 1; i <= variables; ++i) {
         Clause& reso = clauses[reason[k]];
         if (reso.has(i)) {
-          bool pos_i = reso.ispos(i);
+          bool pos_i = reso.is_pos(i);
           if ((pos && pos_i) || (!pos && !pos_i)) {
             clause.add(i);
           } else {

@@ -29,13 +29,13 @@ class Model {
     return n;
   }
 
-  bool isset(int x) const {
+  bool is_set(int x) const {
     if (x < 0) x = -x;
     return used[x];
   }
 
   void set(int x, bool v) {
-    history.push_back(Recall{isset(x), value(x), x});
+    history.push_back(Recall{is_set(x), value(x), x});
     if (x < 0) {
       x = -x;
       v = !v;
@@ -45,7 +45,7 @@ class Model {
   }
 
   void unset(int x) {
-    history.push_back(Recall{isset(x), value(x), x});
+    history.push_back(Recall{is_set(x), value(x), x});
     used[x] = 0;
   }
 
@@ -93,10 +93,9 @@ class Model {
           break;
         }
       }
-      if ((*witness) == -1) {
+      if ((*witness) == -1)
         return false;
-      }
-    return true;
+      return true;
     }
   }
 

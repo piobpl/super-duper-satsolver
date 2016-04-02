@@ -51,7 +51,7 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
           solved = false;
           return;
       } else {
-        up.backtrack(beta);
+        up.recall(beta);
         dl = beta;
       }
     }
