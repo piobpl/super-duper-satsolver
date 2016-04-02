@@ -9,7 +9,7 @@
 
 class Solver {
  public:
-  virtual void solve(int n, std::vector<Clause> clauses) = 0;
+  virtual void solve(std::vector<Clause> clauses) = 0;
 
   virtual bool success() = 0;
 

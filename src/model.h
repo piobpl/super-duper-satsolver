@@ -81,29 +81,28 @@ class Model {
       }
     return 1;
   }
-  
-  bool ambivalent(const Clause& c, int* vitness){
-    if(satisfied(c)){
+
+  bool ambivalent(const Clause& c, int* witness) const {
+    if (satisfied(c)) {
       return false;
-    }
-    else{
-      (*vitness)=-1;
-      for(int i=1; i<=n; ++i){
-        if(!used[i]){
-          (*vitness) = i;
+    } else {
+      (*witness)=-1;
+      for (int i = 1; i <= n; ++i) {
+        if (!used[i]) {
+          (*witness) = i;
           break;
         }
       }
-      if((*vitness)==-1){
+      if ((*witness) == -1) {
         return false;
       }
-	  return true;
+    return true;
     }
   }
-  
-  bool all_assigned(){
-    for(int i=1; i<=n; ++i){
-      if(!used[i]){
+
+  bool all_assigned() const {
+    for (int i = 1; i <= n; ++i) {
+      if (!used[i]) {
         return false;
       }
     }

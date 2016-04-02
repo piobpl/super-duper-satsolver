@@ -13,7 +13,6 @@ OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS)
-	touch src/solver_type.h
 	@mkdir -p bin
 	$(CC) $(CXXFLAGS) -o bin/$@ $^
 
@@ -38,6 +37,7 @@ coverage: clean test
 	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
 	    --html --html-details -o coverage/report.html
 	make clean
+	@echo "Coverage statistics created in coverage/ dir"
 
 benchmark: solver verifier
 	./scripts/benchmark.py ./bin/solver

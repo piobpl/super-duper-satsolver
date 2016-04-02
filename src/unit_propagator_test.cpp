@@ -7,33 +7,33 @@
 #include "../src/unit_propagator.h"
 
 TEST(UnitPropagatorTest, AddEmptyClause) {
-  int max_var = 0;
-  UnitPropagator unit_propagator(max_var);
-  unit_propagator.add_clause(Clause(max_var));
+  int variables = 0;
+  UnitPropagator unit_propagator(variables);
+  unit_propagator.add_clause(Clause(variables));
   ASSERT_TRUE(unit_propagator.has_failed());
 }
 
 TEST(UnitPropagatorTest, AddFailedClause) {
-  int max_var = 1;
-  UnitPropagator unit_propagator(max_var);
+  int variables = 1;
+  UnitPropagator unit_propagator(variables);
 
-  Clause clause1(max_var);
+  Clause clause1(variables);
   clause1.add(1);
   unit_propagator.add_clause(clause1);
-  Clause clause2(max_var);
+  Clause clause2(variables);
   clause2.add(-1);
   unit_propagator.add_clause(clause2);
   ASSERT_TRUE(unit_propagator.has_failed());
 }
 
 TEST(UnitPropagatorTest, SuccessfulPropagator) {
-  int max_var = 4;
-  UnitPropagator unit_propagator(max_var);
+  int variables = 4;
+  UnitPropagator unit_propagator(variables);
   std::vector<Clause> clauses = {
-    Clause(max_var, {1, 2, 3}),
-    Clause(max_var, {1, -2, 3, -4}),
-    Clause(max_var, {-1}),
-    Clause(max_var, {1, -3})
+    Clause(variables, {1, 2, 3}),
+    Clause(variables, {1, -2, 3, -4}),
+    Clause(variables, {-1}),
+    Clause(variables, {1, -3})
   };
   unit_propagator.add_clauses(clauses);
   unit_propagator.propagate();
@@ -50,12 +50,12 @@ TEST(UnitPropagatorTest, SuccessfulPropagator) {
 }
 
 TEST(UnitPropagatorTest, FailedPropagator) {
-  int max_var = 2;
-  UnitPropagator unit_propagator(max_var);
+  int variables = 2;
+  UnitPropagator unit_propagator(variables);
   std::vector<Clause> clauses = {
-    Clause(max_var, {1, -2}),
-    Clause(max_var, {2}),
-    Clause(max_var, {-1, -2})
+    Clause(variables, {1, -2}),
+    Clause(variables, {2}),
+    Clause(variables, {-1, -2})
   };
   unit_propagator.add_clauses(clauses);
   unit_propagator.propagate();

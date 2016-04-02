@@ -2,6 +2,10 @@
 
 #include "../src/unit_propagator.h"
 
+#include <algorithm>
+#include <queue>
+#include <vector>
+
 void UnitPropagator::add_clause(const Clause &clause) {
   int c = static_cast<int>(clauses.size());
   clauses.push_back(clause);
@@ -38,7 +42,7 @@ void UnitPropagator::add_clause(const Clause &clause) {
 }
 
 bool UnitPropagator::propagate() {
-  if (failed) return false;;
+  if (failed) return false;
   while (!propagation_queue.empty()) {
     int L = propagation_queue.front();
     propagation_queue.pop();
@@ -64,4 +68,45 @@ bool UnitPropagator::propagate() {
     }
   }
   return true;
+}
+
+int UnitPropagator::diagnose() {
+  std::vector<Clause> bad_clauses;
+  for (Clause clause : clauses) {
+    if (model.spoiled(clause)) {
+      bad_clauses.push_back(clause);
+    }
+  }
+
+  int ret_to_lvl = -1;
+  for (Clause &clause : bad_clauses) {
+    std::queue<int> mov_back;
+    int k;
+    while ((k=find_nonroot_var(clause)) != -1) {
+      bool pos = clause.ispos(k);
+      clause.remove(k);
+      for (int i = 1; i <= variables; ++i) {
+        Clause& reso = clauses[reason[k]];
+        if (reso.has(i)) {
+          bool pos_i = reso.ispos(i);
+          if ((pos && pos_i) || (!pos && !pos_i)) {
+            clause.add(i);
+          } else {
+            clause.add(-i);
+          }
+        }
+      }
+    }
+    for (int i = 1; i <= variables; ++i) {
+      if (clause.has(i)) {
+        ret_to_lvl = std::min(ret_to_lvl, level[i]);
+      }
+    }
+  }
+  /* to powinno jeszcze zwracac -1 
+   * gdy zmienna na poziomie 0 od razu daje sprzecznosc
+   * prosty fix na jutro
+   */
+  add_clauses(bad_clauses);
+  return ret_to_lvl;
 }

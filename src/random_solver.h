@@ -16,7 +16,7 @@ class RandomSolver : public Solver {
   std::default_random_engine e;
   std::uniform_int_distribution<int> u;
 
-  int n;
+  int variables;
   std::vector<Clause> clauses;
   Model model;
   bool solved;
@@ -29,19 +29,20 @@ class RandomSolver : public Solver {
   }
 
  public:
-  RandomSolver() : RandomSolver(-1) {}
+  explicit RandomSolver(int _variables, int lim)
+      : e(r()),
+        u(0, 1),
+        variables(_variables),
+        model(variables),
+        limit(lim) {}
 
-  explicit RandomSolver(int lim) : e(r()), u(0, 1), model(0), limit(lim) {}
-
-  void solve(int _n, std::vector<Clause> _clauses) override {
-    n = _n;
+  void solve(std::vector<Clause> _clauses) override {
     clauses = _clauses;
-    model = Model(n);
     int m = static_cast<int>(clauses.size());
 
     solved = 0;
 
-    for (int i = 1; i <= n; ++i)
+    for (int i = 1; i <= variables; ++i)
       model.set(i, boolean());
 
     for (int i = 0; i < m; ++i)
@@ -61,7 +62,7 @@ class RandomSolver : public Solver {
         order.erase(order.begin() + p);
         order.push_front(c);
         p = 0;
-        for (int i = 1; i <= n; ++i)
+        for (int i = 1; i <= variables; ++i)
           if (clauses[c].has(i) || clauses[c].has(-i))
             model.set(i, boolean());
       }
