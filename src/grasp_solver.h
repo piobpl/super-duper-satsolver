@@ -14,7 +14,7 @@
 
 class GraspSolver : public Solver {
   int variables;
-  UnitPropagator up = UnitPropagator(0);
+  UnitPropagator up;
   std::vector<Clause> clauses;
   bool solved;
 
@@ -30,7 +30,7 @@ class GraspSolver : public Solver {
   }
 
   Model solution() override {
-    return up.get_model();
+    return up.model();
   }
 
   void solve(std::vector<Clause> _clauses) override;

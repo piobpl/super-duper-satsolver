@@ -7,7 +7,6 @@
 
 TEST(ModelTest, ModelManipulation) {
   Model m(100);
-  Model::time_type start = m.time();
 
   ASSERT_EQ(m.size(), 100);
 
@@ -29,7 +28,6 @@ TEST(ModelTest, ModelManipulation) {
 
     if (i % 3 == 0) m.set(i, (i % 5) < 2);
   }
-  Model::time_type postinit = m.time();
 
   Clause c(100);
   c.add(3);
@@ -51,23 +49,4 @@ TEST(ModelTest, ModelManipulation) {
   m.set(51, 1);
   ASSERT_FALSE(m.satisfied(c));
   ASSERT_TRUE(m.spoiled(c));
-
-  m.recall(postinit);
-  for (int i = 1; i <= 100; ++i) {
-    SCOPED_TRACE(i);
-
-    if (i % 3 == 0) {
-      ASSERT_TRUE(m.is_set(i));
-      ASSERT_EQ((i % 5) < 2, m.value(i));
-    } else {
-      ASSERT_FALSE(m.is_set(i));
-    }
-  }
-
-  m.recall(start);
-  for (int i = 1; i <= 100; ++i) {
-    SCOPED_TRACE(i);
-
-    ASSERT_FALSE(m.is_set(i));
-  }
 }

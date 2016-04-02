@@ -5,18 +5,18 @@
 #include <vector>
 
 bool GraspSolver::decide(int dl) {
-  const Model& model = up.get_model();
+  const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
-      [&model](Clause& c) {return model.satisfied(c);})) {
+      [&model](Clause& c) { return model.satisfied(c); })) {
     return true;
   }
   for (Clause clause : clauses) {
     int witness;
     if (model.ambivalent(clause, &witness)) {
       if (clause.has(witness)) {
-        up.notice(witness, true, dl);
+        up.assume(witness, true, dl);
       } else if (clause.has(-witness)) {
-        up.notice(witness, false, dl);
+        up.assume(witness, false, dl);
       } else {
         std::cerr << "grasp_solver.h. ERROR.";
         exit(-1);
@@ -32,26 +32,26 @@ bool GraspSolver::decide(int dl) {
 void GraspSolver::solve(std::vector<Clause> _clauses) {
   clauses = _clauses;
   up.add_clauses(clauses);
-  const Model& model = up.get_model();
+  const Model& model = up.model();
 
-  if (!up.propagate()) {
+  if (!up.propagate(-1)) {
       solved = false;
       return;
   }
   // decision level
   int dl = 0;
-  /*due to Marques Silva - for future features 
+  /*due to Marques Silva - for future features
    * check should be done in this way*/
   while (!model.all_assigned()) {
       decide(dl);
       dl++;
-      if (up.propagate()) {
+      if (up.propagate(dl)) {
         int beta = up.diagnose();
-        if ( beta < 0 ) {
+        if (beta < 0) {
           solved = false;
           return;
       } else {
-        up.recall(beta);
+        up.backtrack(beta);
         dl = beta;
       }
     }

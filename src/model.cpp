@@ -4,7 +4,9 @@
 
 std::ostream& operator<<(std::ostream &out, const Model &m) {
   for (int i = 1; i < m.size(); ++i)
-    out << m.value(i) << " ";
-  out << m.value(m.size());
+    if (m.is_set(i))
+      out << i << "=" << m.value(i) << " ";
+  if (m.is_set(m.size()))
+    out << m.size() << "=" << m.value(m.size());
   return out;
 }

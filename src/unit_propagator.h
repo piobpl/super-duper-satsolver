@@ -12,41 +12,44 @@
 
 class UnitPropagator {
   typedef std::array<Clause::Iterator, 2> Observators;
+  struct ObservatorsEvent {
+    int decision_level;
+    int clause;
+    Observators observators;
+  };
 
   std::deque<Clause> clauses;
-  std::vector<Observators> obs;
+  std::vector<Observators> observators;
+  std::vector<ObservatorsEvent> observators_events;
   bool failed;
   int variables;
-  Model model;
+  Model _model;
   std::queue<int> propagation_queue;
-  std::vector<std::vector<int>> observed_data;
+  std::vector<std::vector<int>> _observed;
 
   // reason of unit propagation - index of clause which is reason
-  std::vector<int> reason;
+  std::vector<int> _reason;
   // level on which unit propagation happened
-  std::vector<int> level;
+  std::vector<int> _level;
 
   std::vector<int>& observed(int v) {
-    return observed_data[v + variables];
+    return _observed[v + variables];
   }
 
-  int find_nonroot_var(const Clause& c) {
-    for (int i = 1; i <= variables; i++) {
-      if (c.has(i) && level[i] != -1) {
-        return i;
-      }
-    }
-    return -1;
-  }
+  void push(int literal, int current_reason, int decision_level);
+
+  int find_nonroot_var(const Clause& c);
+
+  int max_level(const Clause& c);
 
  public:
   explicit UnitPropagator(int _variables)
       : failed(0),
         variables(_variables),
-        model(variables),
-        observed_data(2*variables+1),
-        reason(_variables+1, -1),
-        level(_variables+1, -1) {}
+        _model(variables),
+        _observed(2*variables+1),
+        _reason(_variables+1, -1),
+        _level(_variables+1, -1) {}
 
   void add_clauses(const std::vector<Clause> &new_clauses) {
     for (Clause clause : new_clauses) {
@@ -54,35 +57,27 @@ class UnitPropagator {
     }
   }
 
-  void notice(int var, bool val, int dec_level) {
-    model.set(var, val);
-    reason[var] = -1;
-    level[var] = dec_level;
-  }
-
-  void recall(int lvl) {
-    for (int i = 1; i <= variables; ++i) {
-      if (level[i] != -1 && level[i] >= lvl) {
-        model.unset(i);
-        level[i] = -1;
-        reason[i] = -1;
-      }
-    }
+  int reason(int var) {
+    return _reason[var];
   }
 
   bool has_failed() {
     return failed;
   }
 
-  const Model& get_model() {
-    return model;
+  const Model& model() {
+    return _model;
   }
+
+  void assume(int var, bool val, int decision_level);
+
+  void backtrack(int decision_level);
 
   void add_clause(const Clause &clause);
 
   int diagnose();
 
-  bool propagate();
+  bool propagate(int decision_level);
 };
 
 #endif  // SRC_UNIT_PROPAGATOR_H_

@@ -11,22 +11,19 @@
 #include "boost/container/vector.hpp"
 
 class Model {
-  struct Recall {
-    bool set, val;
-    int var;
-  };
-
-  int n;
+  int variables;
   boost::container::vector<bool> used, data;
-  boost::container::vector<Recall> history;
 
  public:
   typedef boost::dynamic_bitset<>::size_type time_type;
 
-  explicit Model(int _n) : n(_n), used(n+1), data(n+1) {}
+  explicit Model(int _variables)
+    : variables(_variables),
+      used(variables+1),
+      data(variables+1) {}
 
   int size() const {
-    return n;
+    return variables;
   }
 
   bool is_set(int x) const {
@@ -35,7 +32,6 @@ class Model {
   }
 
   void set(int x, bool v) {
-    history.push_back(Recall{is_set(x), value(x), x});
     if (x < 0) {
       x = -x;
       v = !v;
@@ -45,26 +41,11 @@ class Model {
   }
 
   void unset(int x) {
-    history.push_back(Recall{is_set(x), value(x), x});
     used[x] = 0;
   }
 
-  time_type time() {
-    return history.size();
-  }
-
-  void recall(time_type past) {
-    while (history.size() > past) {
-      Recall r = history.back();
-      history.pop_back();
-
-      used[r.var] = r.set;
-      data[r.var] = r.val;
-    }
-  }
-
   bool satisfied(const Clause &c) const {
-    for (int i = 1; i <= n; ++i)
+    for (int i = 1; i <= variables; ++i)
       if (used[i])
         if (c.has(data[i] ? i : -i))
           return 1;
@@ -72,7 +53,7 @@ class Model {
   }
 
   bool spoiled(const Clause &c) const {
-    for (int i = 1; i <= n; ++i)
+    for (int i = 1; i <= variables; ++i)
       if (used[i]) {
         if (c.has(data[i] ? i : -i))
           return 0;
@@ -87,7 +68,7 @@ class Model {
       return false;
     } else {
       (*witness)=-1;
-      for (int i = 1; i <= n; ++i) {
+      for (int i = 1; i <= variables; ++i) {
         if (!used[i]) {
           (*witness) = i;
           break;
@@ -100,7 +81,7 @@ class Model {
   }
 
   bool all_assigned() const {
-    for (int i = 1; i <= n; ++i) {
+    for (int i = 1; i <= variables; ++i) {
       if (!used[i]) {
         return false;
       }
