@@ -68,6 +68,14 @@ class Clause {
     if (v > 0) return pos.test(v-1);
     return neg.test(-v-1);
   }
+  
+  bool ispos(int v){
+    return pos.test(v-1);  
+  }	  
+  
+  bool isneg(int v){
+    return neg.test(-v-1);
+  }
 
   void add(int v) {
     if (v > 0)

@@ -37,14 +37,14 @@ class GraspSolver : public Solver {
 		  up.notice(witness, false, dl);
         }
         else{
-          std::cerr << "cos poszlo nie tak"; 
+          std::cerr << "grasp_solver.h. ERROR."; 
           exit(-1);
         }
         return false;
       }
     }
 //jesli jestesmy tutaj to znaczy, ze zdanie jest na pewno niespelnione
-//przez biezace wartosciowanie
+//przez biezace wartosciowanie co nie powinno sie zdazyc (UP powinien wykryc)
     return false;
   }
   
@@ -78,9 +78,9 @@ class GraspSolver : public Solver {
 	        return;
         }
         else{
-          up.backtrack();
+          up.backtrack(beta);
           dl = beta;
-          }
+        }
       }
     }
     solved = true;
