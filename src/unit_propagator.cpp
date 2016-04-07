@@ -140,22 +140,20 @@ int UnitPropagator::diagnose() {
     std::queue<int> mov_back;
     int k;
     while ((k=find_nonroot_var(clause)) != -1) {
-      bool pos = clause.is_pos(k);
       clause.remove(k);
       for (int i = 1; i <= variables; ++i) {
         Clause& reso = clauses[_reason[k]];
-        if (reso.has(i)) {
-          bool pos_i = reso.is_pos(i);
-          if ((pos && pos_i) || (!pos && !pos_i)) {
-            clause.add(i);
-          } else {
-            clause.add(-i);
-          }
+        if (reso.has(i) && i != k) {
+           clause.add(i);
         }
       }
     }
     for (int i = 1; i <= variables; ++i) {
       if (clause.has(i)) {
+        if ( _model.value(i) == true ) {
+          clause.remove(i);
+          clause.add(-i);
+        }
         ret_to_lvl = std::min(ret_to_lvl, _level[i]);
       }
     }

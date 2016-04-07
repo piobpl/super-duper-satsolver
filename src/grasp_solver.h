@@ -23,7 +23,7 @@ class GraspSolver : public Solver {
   bool decide(int dl);
 
  public:
-  explicit GraspSolver(int _variables): up(_variables) {}
+  explicit GraspSolver(int _variables): variables(_variables), up(_variables) {}
 
   bool success() override {
     return solved;
