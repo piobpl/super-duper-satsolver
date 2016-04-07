@@ -16,7 +16,7 @@ void UnitPropagator::push(int literal, int current_reason, int decision_level) {
 
 int UnitPropagator::find_nonroot_var(const Clause& c) {
   for (int i = 1; i <= variables; i++) {
-    if (c.has(i) && _level[i] != -1) {
+    if ((c.has(i) || c.has(-i)) && _reason[i] != -1) {
       return i;
     }
   }
@@ -135,17 +135,22 @@ int UnitPropagator::diagnose() {
     }
   }
 
-  int ret_to_lvl = -1;
+  int ret_to_lvl = 1000000000;
   for (Clause &clause : bad_clauses) {
+    bool was_here[variables+1];
     std::queue<int> mov_back;
     int k;
+    for(int i=1; i<=variables; ++i){
+		was_here[i] = clause.has(i) || clause.has(-i);
+	}
     while ((k=find_nonroot_var(clause)) != -1) {
       clause.remove(k);
+	  Clause& reso = clauses[_reason[k]];
       for (int i = 1; i <= variables; ++i) {
-        Clause& reso = clauses[_reason[k]];
-        if (reso.has(i) && i != k) {
-           clause.add(i);
-        }
+		if ( !was_here[i] && (reso.has(i) || reso.has(-i)) && i != k) {
+			 was_here[i] = true;
+			 clause.add(i);
+		}
       }
     }
     for (int i = 1; i <= variables; ++i) {
