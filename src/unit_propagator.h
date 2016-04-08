@@ -69,6 +69,10 @@ class UnitPropagator {
     return _model;
   }
 
+  const std::deque<Clause>& get_clauses() {
+    return clauses;
+  }
+
   void assume(int var, bool val, int decision_level);
 
   void backtrack(int decision_level);

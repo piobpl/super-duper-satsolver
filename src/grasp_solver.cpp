@@ -8,6 +8,11 @@ bool GraspSolver::decide(int dl) {
   const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
       [&model](Clause& c) { return model.satisfied(c); })) {
+    for (int i=1; i <= variables; ++i) {
+      if (!model.is_set(i)) {
+         up.assume(i, true, dl);
+      }
+    }
     return true;
   }
   for (Clause clause : clauses) {
@@ -18,7 +23,6 @@ bool GraspSolver::decide(int dl) {
       } else if (clause.has(-witness)) {
         up.assume(witness, false, dl);
       } else {
-        std::cerr << "grasp_solver.h. ERROR.";
         exit(-1);
       }
       return false;
@@ -44,17 +48,18 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
    * check should be done in this way*/
   while (!model.all_assigned()) {
       decide(dl);
+      std::cout << std::endl;
       dl++;
-      if (up.propagate(dl)) {
+      if (!up.propagate(dl)) {
         int beta = up.diagnose();
         if (beta < 0) {
           solved = false;
           return;
-      } else {
-        up.backtrack(beta);
-        dl = beta;
+        } else {
+          up.backtrack(beta);
+          dl = beta;
+        }
       }
-    }
   }
   solved = true;
 }

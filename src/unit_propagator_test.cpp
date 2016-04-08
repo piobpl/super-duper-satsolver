@@ -136,3 +136,36 @@ TEST(UnitPropagatorTest, FailedAssumptions) {
   ASSERT_FALSE(unit_propagator.has_failed());
 }
 
+TEST(UnitPropagatorTest, DiagnoseCorectness) {
+  int vars = 8;
+  UnitPropagator up(vars);
+
+  Clause clause1(vars);
+  clause1.add(1); clause1.add(8); clause1.add(-2);
+  Clause clause2(vars);
+  clause2.add(1); clause2.add(-3);
+  Clause clause3(vars);
+  clause3.add(2); clause3.add(3); clause3.add(4);
+  Clause clause4(vars);
+  clause4.add(-4); clause4.add(-5);
+  Clause clause5(vars);
+  clause5.add(7); clause5.add(-4); clause5.add(-6);
+  Clause clause6(vars);
+  clause6.add(5); clause6.add(6);
+  std::vector<Clause> clauses;
+  clauses.push_back(clause1); clauses.push_back(clause2);
+  clauses.push_back(clause3); clauses.push_back(clause4);
+  clauses.push_back(clause5); clauses.push_back(clause6);
+
+  up.add_clauses(clauses);
+  up.assume(7, false, 0);
+  up.assume(8, false, 0);
+  up.assume(1, false, 0);
+
+  up.propagate(0);
+
+  ASSERT_EQ(up.diagnose(), 0);
+}
+
+
+

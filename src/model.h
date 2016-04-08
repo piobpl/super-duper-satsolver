@@ -67,16 +67,13 @@ class Model {
     if (satisfied(c)) {
       return false;
     } else {
-      (*witness)=-1;
       for (int i = 1; i <= variables; ++i) {
-        if (!used[i]) {
+        if (!used[i] && (c.has(i) || c.has(-i))) {
           (*witness) = i;
-          break;
+          return true;
         }
       }
-      if ((*witness) == -1)
-        return false;
-      return true;
+      return false;
     }
   }
 

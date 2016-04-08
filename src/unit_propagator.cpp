@@ -137,20 +137,28 @@ int UnitPropagator::diagnose() {
 
   int ret_to_lvl = 1000000000;
   for (Clause &clause : bad_clauses) {
-    bool was_here[variables+1];
+    if (clause.count() == 1) {
+      auto it = clause.begin();
+      if (_reason[*it] == -1) {
+          // we tried all the possibilities
+          return -1;
+      }
+    }
+    std::vector<bool> was_here;
+    was_here.resize(variables+1);
     std::queue<int> mov_back;
     int k;
-    for(int i=1; i<=variables; ++i){
-		was_here[i] = clause.has(i) || clause.has(-i);
-	}
+    for (int i=1; i <= variables; ++i) {
+      was_here[i] = clause.has(i) || clause.has(-i);
+    }
     while ((k=find_nonroot_var(clause)) != -1) {
       clause.remove(k);
-	  Clause& reso = clauses[_reason[k]];
+      Clause& reso = clauses[_reason[k]];
       for (int i = 1; i <= variables; ++i) {
-		if ( !was_here[i] && (reso.has(i) || reso.has(-i)) && i != k) {
-			 was_here[i] = true;
-			 clause.add(i);
-		}
+        if (!was_here[i] && (reso.has(i) || reso.has(-i)) && i != k) {
+          was_here[i] = true;
+          clause.add(i);
+        }
       }
     }
     for (int i = 1; i <= variables; ++i) {
