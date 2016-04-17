@@ -18,9 +18,7 @@ class GraspSolver : public Solver {
   std::vector<Clause> clauses;
   bool solved;
 
-  // returns true if all clauses are satisfied.
-  // otherwise returns false and sets one variable to some value
-  bool decide(int dl);
+  void decide(int dl);
 
  public:
   explicit GraspSolver(int _variables): variables(_variables), up(_variables) {}

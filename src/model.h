@@ -41,6 +41,9 @@ class Model {
   }
 
   void unset(int x) {
+    if (x < 0) {
+      x = -x;
+    }
     used[x] = 0;
   }
 

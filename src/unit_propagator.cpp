@@ -3,6 +3,7 @@
 #include "../src/unit_propagator.h"
 
 #include <algorithm>
+#include <limits>
 #include <queue>
 #include <vector>
 
@@ -68,23 +69,20 @@ void UnitPropagator::add_clause(const Clause &clause) {
     if (!_model.is_set(*st) || _model.value(*st)) break;
     ++st;
   }
+  Clause::Iterator nd = st;
+
   if (st.end()) {
     failed = true;
-    clauses.pop_back();
-    return;
-  }
-
-  Clause::Iterator nd = st;
-  ++nd;
-  while (!nd.end()) {
-    if (!_model.is_set(*nd) || _model.value(*nd)) break;
+  } else {
     ++nd;
-  }
-  if (nd.end()) {
-    if (!_model.is_set(*st))
-      push(*st, c, max_level(clause));
-    clauses.pop_back();
-    return;
+    while (!nd.end()) {
+      if (!_model.is_set(*nd) || _model.value(*nd)) break;
+      ++nd;
+    }
+    if (nd.end()) {
+      if (!_model.is_set(*st))
+        push(*st, c, max_level(clause));
+    }
   }
 
   observators.push_back(Observators{st, nd});
@@ -128,22 +126,14 @@ bool UnitPropagator::propagate(int decision_level) {
 }
 
 int UnitPropagator::diagnose() {
+  std::cerr << "diagnosing..." << std::flush;
   std::vector<Clause> bad_clauses;
-  for (Clause clause : clauses) {
-    if (_model.spoiled(clause)) {
+  for (Clause clause : clauses)
+    if (_model.spoiled(clause))
       bad_clauses.push_back(clause);
-    }
-  }
 
-  int ret_to_lvl = 1000000000;
+  int ret_to_lvl = std::numeric_limits<int>::max();
   for (Clause &clause : bad_clauses) {
-    if (clause.count() == 1) {
-      auto it = clause.begin();
-      if (_reason[*it] == -1) {
-          // we tried all the possibilities
-          return -1;
-      }
-    }
     std::vector<bool> was_here;
     was_here.resize(variables+1);
     std::queue<int> mov_back;
@@ -176,5 +166,6 @@ int UnitPropagator::diagnose() {
    * prosty fix na jutro
    */
   add_clauses(bad_clauses);
+  std::cerr << " problem @ " << ret_to_lvl << std::endl;
   return ret_to_lvl;
 }

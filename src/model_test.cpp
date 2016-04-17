@@ -17,13 +17,18 @@ TEST(ModelTest, ModelManipulation) {
 
     m.set(i, 0);
     ASSERT_TRUE(m.is_set(i));
+    ASSERT_TRUE(m.is_set(-i));
     ASSERT_FALSE(m.value(i));
 
-    m.set(i, 1);
+    m.set(-i, 0);
     ASSERT_TRUE(m.is_set(i));
+    ASSERT_TRUE(m.is_set(-i));
     ASSERT_TRUE(m.value(i));
 
-    m.unset(i);
+    if (i&1)
+      m.unset(i);
+    else
+      m.unset(-i);
     ASSERT_FALSE(m.is_set(i));
 
     if (i % 3 == 0) m.set(i, (i % 5) < 2);
@@ -49,4 +54,22 @@ TEST(ModelTest, ModelManipulation) {
   m.set(51, 1);
   ASSERT_FALSE(m.satisfied(c));
   ASSERT_TRUE(m.spoiled(c));
+
+  Model mp(3);
+  mp.set(1, 1);
+  mp.set(-2, 1);
+  ASSERT_FALSE(mp.all_assigned());
+
+  Clause cp(3);
+  cp.add(-1);
+  cp.add(2);
+  int i;
+  ASSERT_FALSE(mp.ambivalent(cp, &i));
+  cp.add(3);
+  ASSERT_TRUE(mp.ambivalent(cp, &i));
+  ASSERT_EQ(i, 3);
+
+  mp.set(-3, 0);
+  ASSERT_TRUE(mp.all_assigned());
+  ASSERT_FALSE(mp.ambivalent(cp, &i));
 }

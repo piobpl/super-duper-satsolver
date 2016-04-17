@@ -4,7 +4,7 @@
 
 #include <vector>
 
-bool GraspSolver::decide(int dl) {
+void GraspSolver::decide(int dl) {
   const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
       [&model](Clause& c) { return model.satisfied(c); })) {
@@ -13,7 +13,7 @@ bool GraspSolver::decide(int dl) {
          up.assume(i, true, dl);
       }
     }
-    return true;
+    return;
   }
   for (Clause clause : clauses) {
     int witness;
@@ -25,12 +25,10 @@ bool GraspSolver::decide(int dl) {
       } else {
         exit(-1);
       }
-      return false;
+      return;
     }
   }
-  // jesli jestesmy tutaj to znaczy, ze zdanie jest na pewno niespelnione przez
-  // biezace wartosciowanie co nie powinno sie zdazyc (UP powinien wykryc)
-  return false;
+  assert(false);
 }
 
 void GraspSolver::solve(std::vector<Clause> _clauses) {
@@ -44,11 +42,8 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   }
   // decision level
   int dl = 0;
-  /*due to Marques Silva - for future features
-   * check should be done in this way*/
   while (!model.all_assigned()) {
       decide(dl);
-      std::cout << std::endl;
       dl++;
       if (!up.propagate(dl)) {
         int beta = up.diagnose();
