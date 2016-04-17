@@ -90,6 +90,8 @@ class Model {
   }
 
   bool value(int x) const {
+    if (x < 0)
+      return !data[-x];
     return data[x];
   }
 };

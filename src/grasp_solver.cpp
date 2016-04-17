@@ -43,18 +43,20 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   // decision level
   int dl = 0;
   while (!model.all_assigned()) {
-      decide(dl);
-      dl++;
-      if (!up.propagate(dl)) {
-        int beta = up.diagnose();
-        if (beta < 0) {
-          solved = false;
-          return;
-        } else {
-          up.backtrack(beta);
-          dl = beta;
-        }
+    std::cerr << "current model " << model << std::endl;
+    decide(dl);
+    dl++;
+    if (!up.propagate(dl)) {
+      int beta = up.diagnose();
+      if (beta < 0) {
+        solved = false;
+        return;
+      } else {
+        up.backtrack(beta);
+        dl = beta;
       }
+    }
+    std::cerr << std::endl;
   }
   solved = true;
 }

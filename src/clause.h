@@ -39,7 +39,7 @@ class Clause {
       return pos ? static_cast<int>(i) + 1 : -static_cast<int>(i) - 1;
     }
 
-    bool end() {
+    bool end() const {
       return *this == c->end();
     }
 
@@ -66,14 +66,6 @@ class Clause {
 
   bool has(int v) const {
     if (v > 0) return pos.test(v-1);
-    return neg.test(-v-1);
-  }
-
-  bool is_pos(int v) {
-    return pos.test(v-1);
-  }
-
-  bool is_neg(int v) {
     return neg.test(-v-1);
   }
 
@@ -124,6 +116,8 @@ class Clause {
   friend Clause operator|(const Clause &a, const Clause &b);
 
   friend std::ostream& operator<<(std::ostream &out, const Clause &c);
+
+  friend std::ostream& operator<<(std::ostream &out, const Clause::Iterator &c);
 };
 
 #endif  // SRC_CLAUSE_H_

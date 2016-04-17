@@ -27,7 +27,7 @@ lint:
 	./scripts/cpplint.py src/*
 
 test: tester
-	./bin/tester
+	./bin/tester 2> /dev/null
 
 coverage: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 

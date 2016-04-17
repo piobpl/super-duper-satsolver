@@ -31,3 +31,12 @@ std::ostream& operator<<(std::ostream &out, const Clause &c) {
   out << ")";
   return out;
 }
+
+std::ostream& operator<<(std::ostream &out, const Clause::Iterator &it) {
+  out << "->";
+  if (it.end())
+    out << "|";
+  else
+    out << *it;
+  return out;
+}

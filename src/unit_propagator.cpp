@@ -13,6 +13,7 @@ void UnitPropagator::push(int literal, int current_reason, int decision_level) {
   _reason[variable] = current_reason;
   _level[variable] = decision_level;
   propagation_queue.push(literal);
+  std::cerr << "\tinferred " << literal << std::endl;
 }
 
 int UnitPropagator::find_nonroot_var(const Clause& c) {
@@ -32,6 +33,8 @@ int UnitPropagator::max_level(const Clause& c) {
 }
 
 void UnitPropagator::assume(int var, bool val, int decision_level) {
+  std::cerr << "assuming " << var << " = " << val
+    << " @ " << decision_level << std::endl;
   if (_model.is_set(var)) {
     if (_model.value(var) != val)
       failed = true;
@@ -41,6 +44,7 @@ void UnitPropagator::assume(int var, bool val, int decision_level) {
 }
 
 void UnitPropagator::backtrack(int decision_level) {
+  std::cerr << "backtracking to " << decision_level << std::endl;
   for (int i = 1; i <= variables; ++i) {
     if (_level[i] != -1 && _level[i] >= decision_level) {
       _model.unset(i);
@@ -61,6 +65,8 @@ void UnitPropagator::backtrack(int decision_level) {
 }
 
 void UnitPropagator::add_clause(const Clause &clause) {
+  std::cerr << "adding clause " << clause << std::endl;
+
   int c = static_cast<int>(clauses.size());
   clauses.push_back(clause);
 
@@ -88,12 +94,17 @@ void UnitPropagator::add_clause(const Clause &clause) {
   observators.push_back(Observators{st, nd});
   observed(*st).push_back(c);
   observed(*nd).push_back(c);
+
+  std::cerr << "\t" << observators[c][0]
+    << " " << observators[c][1] << std::endl;
 }
 
 bool UnitPropagator::propagate(int decision_level) {
+  std::cerr << "propagating " << decision_level << std::endl;
   if (failed) return false;
   while (!propagation_queue.empty()) {
     int literal = propagation_queue.front();
+    std::cerr << "proping " << literal << std::endl;
     propagation_queue.pop();
     for (int c : observed(-literal)) {
       observators_events.push_back(ObservatorsEvent{
@@ -111,13 +122,16 @@ bool UnitPropagator::propagate(int decision_level) {
             || _model.value(*observators[c][1])) break;
         ++observators[c][1];
       }
+
       int new_literal = *observators[c][0];
       if (!observators[c][1].end()) {
         observed(*observators[c][1]).push_back(c);
       } else if (_model.is_set(new_literal) && !_model.value(new_literal)) {
+        std::cerr << "\tfailed " << clauses[c] << std::endl;
         failed = true;
         return false;
       } else if (!_model.is_set(new_literal)) {
+        std::cerr << "\tclosed " << clauses[c] << std::endl;
         push(new_literal, c, max_level(clauses[c]));
       }
     }
@@ -153,7 +167,7 @@ int UnitPropagator::diagnose() {
     }
     for (int i = 1; i <= variables; ++i) {
       if (clause.has(i)) {
-        if ( _model.value(i) == true ) {
+        if (_model.value(i) == true) {
           clause.remove(i);
           clause.add(-i);
         }
@@ -166,6 +180,6 @@ int UnitPropagator::diagnose() {
    * prosty fix na jutro
    */
   add_clauses(bad_clauses);
-  std::cerr << " problem @ " << ret_to_lvl << std::endl;
+  std::cerr << "\tproblem @ " << ret_to_lvl << std::endl;
   return ret_to_lvl;
 }
