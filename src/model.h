@@ -32,7 +32,6 @@ class Literal {
   // i in {..., -2, -1} u {1, 2, ...}
   Literal() {}
   explicit Literal(int i) : _i(i) {}
-  explicit Literal(Variable v) : _i(v.index()+1) {}
 
   Variable variable() const { return Variable(std::abs(_i)); }
 
@@ -46,14 +45,6 @@ class Literal {
  private:
   int _i;
 };
-
-Literal operator+(const Variable &v) {
-  return Literal(v._i);
-}
-
-Literal operator-(const Variable &v) {
-  return Literal(-v._i);
-}
 
 typedef std::vector<Literal> Clause;
 
@@ -134,16 +125,5 @@ class Model {
  private:
   std::vector<bool> _def, _val;
 };
-
-std::ostream& operator<<(std::ostream &out, const Model &m) {
-  bool st = true;
-  for (unsigned i = 0; i < m._def.size(); ++i)
-    if (m._def[i]) {
-      if (!st) out << " ";
-      st = false;
-      out << i << "=" << (m._val[i]?1:0);
-    }
-  return out;
-}
 
 #endif  // SRC_MODEL_H_

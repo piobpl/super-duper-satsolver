@@ -27,7 +27,7 @@ lint:
 	./scripts/cpplint.py src/*
 
 test: tester
-	./bin/tester 2> /dev/null
+	./bin/tester
 
 coverage: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 
@@ -40,7 +40,7 @@ coverage: clean test
 	@echo "Coverage statistics created in coverage/ dir"
 
 benchmark: solver verifier
-	./scripts/benchmark.py ./bin/solver
+	./scripts/benchmark.py ./bin/solver uf20-
 
 clean:
 	rm -f obj/*
