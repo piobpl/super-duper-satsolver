@@ -38,15 +38,22 @@ class Literal {
   bool pos() const { return _i > 0; }
   bool neg() const { return _i < 0; }
 
-  Literal operator~() const { return Literal(-_i); }
+  Literal operator-() const { return Literal(-_i); }
 
   bool operator==(const Literal &b) const { return _i == b._i; }
   bool operator!=(const Literal &b) const { return _i == b._i; }
+
+  friend std::ostream& operator<<(std::ostream &out, const Literal &x);
+
  private:
   int _i;
 };
 
 typedef std::vector<Literal> Clause;
+
+Clause make_clause(std::initializer_list<int> lits);
+
+std::ostream& operator<<(std::ostream &out, const Clause &c);
 
 class Model {
  public:
@@ -62,7 +69,7 @@ class Model {
 
   bool value(Variable x) const {
     assert(_def[x.index()]);
-    _val[x.index()];
+    return _val[x.index()];
   }
 
   bool value(Literal x) const {
@@ -72,17 +79,9 @@ class Model {
     return !_val[x.variable().index()];
   }
 
-  void set(Variable x, bool v) {
-    _def[x.index()] = true;
-    _val[x.index()] = v;
-  }
-
-  void set(Literal x, bool v) {
+  void set(Literal x) {
     _def[x.variable().index()] = true;
-    if (x.pos())
-      _val[x.variable().index()] = v;
-    else
-      _val[x.variable().index()] = !v;
+    _val[x.variable().index()] = x.pos();
   }
 
   void unset(Variable x) {
