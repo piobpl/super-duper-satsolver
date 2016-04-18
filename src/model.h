@@ -3,99 +3,128 @@
 #ifndef SRC_MODEL_H_
 #define SRC_MODEL_H_
 
-#include <vector>
+#include <cassert>
 #include <iostream>
+#include <utility>
+#include <vector>
 
-#include "../src/clause.h"
+class Variable {
+ public:
+  // i in {1, 2, ...}
+  explicit Variable(int i) : _i(i) {}
 
-#include "boost/container/vector.hpp"
+  int index() { return _i-1; }
+ private:
+  int _i;
+};
+
+class Literal {
+ public:
+  // i in {..., -2, -1} u {1, 2, ...}
+  explicit Literal(int i) : _i(i) {}
+  explicit Literal(Variable v) : _i(v.index()+1) {}
+
+  Variable variable() { return Variable(std::abs(_i)); }
+
+  bool pos() { return _i > 0; }
+
+  bool neg() { return _i < 0; }
+
+  Literal operator-() { return Literal(-_i); }
+ private:
+  int _i;
+};
+
+typedef std::vector<Literal> Clause;
 
 class Model {
-  int variables;
-  boost::container::vector<bool> used, data;
-
  public:
-  typedef boost::dynamic_bitset<>::size_type time_type;
+  explicit Model(int variables) : _def(variables), _val(variables) {}
 
-  explicit Model(int _variables)
-    : variables(_variables),
-      used(variables+1),
-      data(variables+1) {}
-
-  int size() const {
-    return variables;
+  bool defined(Variable v) const {
+    return _def[v.index()];
   }
 
-  bool is_set(int x) const {
-    if (x < 0) x = -x;
-    return used[x];
+  bool defined(Literal v) const {
+    return _def[v.variable().index()];
   }
 
-  void set(int x, bool v) {
-    if (x < 0) {
-      x = -x;
-      v = !v;
-    }
-    used[x] = 1;
-    data[x] = v;
+  bool value(Variable x) const {
+    assert(_def[x.index()]);
+    _val[x.index()];
   }
 
-  void unset(int x) {
-    if (x < 0) {
-      x = -x;
-    }
-    used[x] = 0;
+  bool value(Literal x) const {
+    assert(_def[x.variable().index()]);
+    if (x.pos())
+      _val[x.variable().index()];
+    else
+      !_val[x.variable().index()];
+  }
+
+  void set(Variable x, bool v) {
+    _def[x.index()] = true;
+    _val[x.index()] = v;
+  }
+
+  void set(Literal x, bool v) {
+    _def[x.variable().index()] = true;
+    if (x.pos())
+      _val[x.variable().index()] = v;
+    else
+      _val[x.variable().index()] = !v;
+  }
+
+  void unset(Variable x) {
+    _def[x.index()] = false;
+  }
+
+  void unset(Literal x) {
+    _def[x.variable().index()] = false;
   }
 
   bool satisfied(const Clause &c) const {
-    for (int i = 1; i <= variables; ++i)
-      if (used[i])
-        if (c.has(data[i] ? i : -i))
-          return 1;
+    for (Literal x : c)
+      if (defined(x) && value(x))
+        return 1;
     return 0;
   }
 
   bool spoiled(const Clause &c) const {
-    for (int i = 1; i <= variables; ++i)
-      if (used[i]) {
-        if (c.has(data[i] ? i : -i))
-          return 0;
-      } else if (c.has(i) || c.has(-i)) {
+    for (Literal x : c)
+      if (!defined(x) || value(x))
         return 0;
-      }
     return 1;
   }
 
-  bool ambivalent(const Clause& c, int* witness) const {
-    if (satisfied(c)) {
-      return false;
-    } else {
-      for (int i = 1; i <= variables; ++i) {
-        if (!used[i] && (c.has(i) || c.has(-i))) {
-          (*witness) = i;
-          return true;
-        }
-      }
-      return false;
-    }
+  std::pair<bool, Literal> ambivalent(const Clause& c) const {
+    for (Literal x : c)
+      if (!defined(x))
+        return std::pair<bool, Literal>(true, x);
+    return std::pair<bool, Literal>(false, Literal(1));
   }
 
   bool all_assigned() const {
-    for (int i = 1; i <= variables; ++i) {
-      if (!used[i]) {
-        return false;
-      }
-    }
-    return true;
+    for (unsigned i = 0; i < _def.size(); ++i)
+      if (!_def[i]) return 0;
+    return 1;
   }
 
-  bool value(int x) const {
-    if (x < 0)
-      return !data[-x];
-    return data[x];
-  }
+  friend std::ostream& operator<<(std::ostream &out, const Model &m);
+
+ private:
+  std::vector<bool> _def, _val;
 };
 
-std::ostream& operator<<(std::ostream &out, const Model &m);
+std::ostream& operator<<(std::ostream &out, const Model &m) {
+  bool st = true;
+  for (unsigned i = 0; i < m._def.size(); ++i)
+    if (m._def[i]) {
+      if (!st) out << " ";
+      st = false;
+      out << i << "=" << (m._val[i]?1:0) << " ";
+    }
+  return out;
+}
 
 #endif  // SRC_MODEL_H_

@@ -8,7 +8,7 @@
 #include <random>
 #include <vector>
 
-#include "../src/clause.h"
+#include "../src/model.h"
 #include "../src/solver.h"
 #include "../src/unit_propagator.h"
 

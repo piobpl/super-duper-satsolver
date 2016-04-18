@@ -5,46 +5,59 @@
 
 #include <deque>
 #include <queue>
+#include <set>
 #include <vector>
 
-#include "../src/clause.h"
 #include "../src/model.h"
 
 class UnitPropagator {
-  typedef std::array<Clause::Iterator, 2> Observators;
-  struct ObservatorsEvent {
-    int decision_level;
+  typedef std::array<Clause::iterator, 2> Observators;
+
+  struct Event {
     int clause;
     Observators observators;
   };
 
   std::deque<Clause> clauses;
   std::vector<Observators> observators;
-  std::vector<ObservatorsEvent> observators_events;
-  bool failed;
+  std::vector<std::vector<Event>> events;
+  bool _failed;
   int variables;
   Model _model;
   std::queue<int> propagation_queue;
-  std::vector<std::vector<int>> _observed;
+  std::vector<std::set<int>> _observed;
 
   // reason of unit propagation - index of clause which is reason
   std::vector<int> _reason;
   // level on which unit propagation happened
   std::vector<int> _level;
 
-  std::vector<int>& observed(int v) {
+  std::set<int>& observed(int v) {
     return _observed[v + variables];
   }
 
-  void push(int literal, int current_reason, int decision_level);
+  void push(Literal literal, int current_reason, int decision_level);
 
   int find_nonroot_var(const Clause& c);
 
   int max_level(const Clause& c);
 
+  /* Analyzes satisfiablity of clause no c.
+   * Clause observers can be in three *stable* states:
+   * - both looking at some different literals, both unset or satisfied
+   * - nd at end, st at satifisfied literal
+   * - both at end, clause spoiled
+   * For unpropagated literals some observers may still look at them as unset
+   * or satisfied, causing the clause observers to be in *temporary* state.
+   * Only first *stable* state can become *temporary* state!
+   * Repair transitions clause observers from *temporary* to *stable* state.
+   */
+  void repair(int c);
+
  public:
   explicit UnitPropagator(int _variables)
-      : failed(0),
+      : events(_variables),
+        _failed(0),
         variables(_variables),
         _model(variables),
         _observed(2*variables+1),
@@ -61,8 +74,8 @@ class UnitPropagator {
     return _reason[var];
   }
 
-  bool has_failed() {
-    return failed;
+  bool failed() {
+    return _failed;
   }
 
   const Model& model() {
@@ -73,19 +86,19 @@ class UnitPropagator {
     return clauses;
   }
 
-  void assume(int var, bool val, int decision_level);
+  void assume(Literal var, int decision_level);
 
   void backtrack(int decision_level);
 
   void add_clause(const Clause &clause);
+
+  void propagate();
 
   int diagnose();
 
   size_t clauses_size() {
     return clauses.size();
   }
-
-  bool propagate(int decision_level);
 };
 
 #endif  // SRC_UNIT_PROPAGATOR_H_

@@ -6,11 +6,12 @@
 #include "../src/model.h"
 #include "../src/unit_propagator.h"
 
+/*
 TEST(UnitPropagatorTest, AddEmptyClause) {
   int variables = 0;
   UnitPropagator unit_propagator(variables);
   unit_propagator.add_clause(Clause(variables));
-  ASSERT_TRUE(unit_propagator.has_failed());
+  ASSERT_TRUE(unit_propagator.failed());
 }
 
 TEST(UnitPropagatorTest, AddFailedClause) {
@@ -23,8 +24,9 @@ TEST(UnitPropagatorTest, AddFailedClause) {
   Clause clause2(variables);
   clause2.add(-1);
   unit_propagator.add_clause(clause2);
-  ASSERT_TRUE(unit_propagator.has_failed());
+  ASSERT_TRUE(unit_propagator.failed());
 }
+*/
 
 TEST(UnitPropagatorTest, SuccessfulPropagator) {
   int variables = 4;
@@ -32,12 +34,12 @@ TEST(UnitPropagatorTest, SuccessfulPropagator) {
   std::vector<Clause> clauses = {
     Clause(variables, {1, 2, 3}),
     Clause(variables, {1, -2, 3, -4}),
-    Clause(variables, {-1}),
     Clause(variables, {1, -3})
   };
   unit_propagator.add_clauses(clauses);
-  unit_propagator.propagate(-1);
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.assume(1, false, 0);
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   Model model = unit_propagator.model();
   ASSERT_TRUE(model.is_set(1));
   ASSERT_FALSE(model.value(1));
@@ -54,12 +56,12 @@ TEST(UnitPropagatorTest, FailedPropagator) {
   UnitPropagator unit_propagator(variables);
   std::vector<Clause> clauses = {
     Clause(variables, {1, -2}),
-    Clause(variables, {2}),
     Clause(variables, {-1, -2})
   };
   unit_propagator.add_clauses(clauses);
-  unit_propagator.propagate(-1);
-  ASSERT_TRUE(unit_propagator.has_failed());
+  unit_propagator.assume(2, true, 0);
+  unit_propagator.propagate();
+  ASSERT_TRUE(unit_propagator.failed());
 }
 
 TEST(UnitPropagatorTest, MakingAssumptions) {
@@ -74,19 +76,19 @@ TEST(UnitPropagatorTest, MakingAssumptions) {
     Clause(variables, {-6, -5}),
   };
   unit_propagator.add_clauses(clauses);
-  ASSERT_TRUE(unit_propagator.propagate(-1));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(5, 1, 0);
-  ASSERT_FALSE(unit_propagator.propagate(0));
-  ASSERT_TRUE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_TRUE(unit_propagator.failed());
   unit_propagator.backtrack(0);
   Model model = unit_propagator.model();
   ASSERT_FALSE(model.is_set(1));
   ASSERT_FALSE(model.is_set(2));
   ASSERT_FALSE(model.is_set(3));
   unit_propagator.assume(5, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   model = unit_propagator.model();
   ASSERT_TRUE(model.is_set(1));
   ASSERT_FALSE(model.value(1));
@@ -107,33 +109,33 @@ TEST(UnitPropagatorTest, FailedAssumptions) {
     Clause(variables, {1, 2, 3, 4}),
   };
   unit_propagator.add_clauses(clauses);
-  ASSERT_TRUE(unit_propagator.propagate(-1));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(2, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(3, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(1, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(4, 0, 0);
-  ASSERT_FALSE(unit_propagator.propagate(0));
-  ASSERT_TRUE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_TRUE(unit_propagator.failed());
   unit_propagator.backtrack(0);
   unit_propagator.assume(2, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(1, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(3, 0, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
   unit_propagator.assume(4, 1, 0);
-  ASSERT_TRUE(unit_propagator.propagate(0));
-  ASSERT_FALSE(unit_propagator.has_failed());
+  unit_propagator.propagate();
+  ASSERT_FALSE(unit_propagator.failed());
 }
 
 TEST(UnitPropagatorTest, DiagnoseCorectness) {
@@ -152,6 +154,6 @@ TEST(UnitPropagatorTest, DiagnoseCorectness) {
   up.assume(8, false, 0);
   up.assume(1, false, 0);
 
-  up.propagate(0);
+  up.propagate();
   ASSERT_EQ(up.diagnose(), 0);
 }

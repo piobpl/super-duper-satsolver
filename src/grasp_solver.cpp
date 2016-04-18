@@ -9,8 +9,8 @@ void GraspSolver::decide(int dl) {
   if (std::all_of(clauses.begin(), clauses.end(),
       [&model](Clause& c) { return model.satisfied(c); })) {
     for (int i=1; i <= variables; ++i) {
-      if (!model.is_set(i)) {
-         up.assume(i, true, dl);
+      if (!model.defined(Variable(i))) {
+         up.assume(Literal(i), dl);
       }
     }
     return;
@@ -19,17 +19,10 @@ void GraspSolver::decide(int dl) {
     if (model.spoiled(clause)) {
       std::cerr << "ERRROR" << std::endl;
     }
-    int witness;
-    if (model.ambivalent(clause, &witness)) {
-      if (clause.has(witness)) {
-        up.assume(witness, true, dl);
-      } else if (clause.has(-witness)) {
-        up.assume(witness, false, dl);
-      } else {
-        exit(-1);
-      }
-      return;
-    }
+    bool ambivalent;
+    Literal witness(1);
+    std::tie(ambivalent, witness) = model.ambivalent(clause);
+    if (ambivalent) up.assume(witness, dl);
   }
   assert(false);
 }
@@ -50,7 +43,7 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
     std::cerr << up.clauses_size() << std::endl;
     decide(dl);
     dl++;
-    while (!up.propagate(dl)) {
+    while (up.failed()) {
       int beta = up.diagnose();
       if (beta < 0) {
         solved = false;
