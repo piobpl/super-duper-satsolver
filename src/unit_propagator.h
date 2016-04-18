@@ -81,6 +81,10 @@ class UnitPropagator {
 
   int diagnose();
 
+  size_t clauses_size() {
+    return clauses.size();
+  }
+
   bool propagate(int decision_level);
 };
 

@@ -18,6 +18,7 @@ void UnitPropagator::push(int literal, int current_reason, int decision_level) {
 
 int UnitPropagator::find_nonroot_var(const Clause& c) {
   for (int i = 1; i <= variables; i++) {
+    std::cerr << "reason[" << i << "]=" << _reason[i] << std::endl;
     if ((c.has(i) || c.has(-i)) && _reason[i] != -1) {
       return i;
     }
@@ -28,7 +29,7 @@ int UnitPropagator::find_nonroot_var(const Clause& c) {
 int UnitPropagator::max_level(const Clause& c) {
   int lvl = -1;
   for (int lit : c)
-    lvl = std::max(lvl, std::abs(lit));
+    lvl = std::max(lvl, _level[std::abs(lit)]);
   return lvl;
 }
 
@@ -62,6 +63,18 @@ void UnitPropagator::backtrack(int decision_level) {
       observed(*observators[e.clause][1]).pop_back();
     observators[e.clause] = e.observators;
   }
+  Clause& c = clauses.back();
+
+  int my_max = -1;
+  int to_set = -1;
+  for (auto it = c.begin(); it != c.end(); ++it) {
+      if (_model.is_set(std::abs(*it))) {
+        my_max = std::max(my_max, _level[std::abs(*it)]);
+      } else {
+        to_set = *it;
+      }
+  }
+  assume(std::abs(to_set), to_set > 0 , my_max);
 }
 
 void UnitPropagator::add_clause(const Clause &clause) {
@@ -86,8 +99,9 @@ void UnitPropagator::add_clause(const Clause &clause) {
       ++nd;
     }
     if (nd.end()) {
-      if (!_model.is_set(*st))
+      if (!_model.is_set(*st)) {
         push(*st, c, max_level(clause));
+      }
     }
   }
 
@@ -140,46 +154,58 @@ bool UnitPropagator::propagate(int decision_level) {
 }
 
 int UnitPropagator::diagnose() {
-  std::cerr << "diagnosing..." << std::flush;
-  std::vector<Clause> bad_clauses;
-  for (Clause clause : clauses)
-    if (_model.spoiled(clause))
-      bad_clauses.push_back(clause);
+  std::cerr << "diagnosing..." << std::endl << std::flush;
+  Clause clause(variables);
+  for (Clause clause_it : clauses) {
+    if (_model.spoiled(clause_it)) {
+      clause = clause_it;
+      break;
+    }
+  }
 
-  int ret_to_lvl = std::numeric_limits<int>::max();
-  for (Clause &clause : bad_clauses) {
-    std::vector<bool> was_here;
-    was_here.resize(variables+1);
-    std::queue<int> mov_back;
-    int k;
-    for (int i=1; i <= variables; ++i) {
-      was_here[i] = clause.has(i) || clause.has(-i);
+  int ret_to_lvl = -1;
+  std::vector<bool> was_here;
+  was_here.resize(variables+1);
+  std::queue<int> mov_back;
+  int k;
+  for (int i=1; i <= variables; ++i) {
+    was_here[i] = clause.has(i) || clause.has(-i);
+    if (was_here[i]) {
+      ret_to_lvl = std::max(ret_to_lvl, _level[i]);
     }
-    while ((k=find_nonroot_var(clause)) != -1) {
-      clause.remove(k);
-      Clause& reso = clauses[_reason[k]];
-      for (int i = 1; i <= variables; ++i) {
-        if (!was_here[i] && (reso.has(i) || reso.has(-i)) && i != k) {
-          was_here[i] = true;
-          clause.add(i);
-        }
-      }
+  }
+
+  while ((k=find_nonroot_var(clause)) != -1) {
+    if (clause.has(k)) {
+        clause.remove(k);
+    } else {
+        clause.remove(-k);
     }
+
+    Clause& reso = clauses[_reason[k]];
     for (int i = 1; i <= variables; ++i) {
-      if (clause.has(i)) {
-        if (_model.value(i) == true) {
-          clause.remove(i);
-          clause.add(-i);
-        }
-        ret_to_lvl = std::min(ret_to_lvl, _level[i]);
+      if (!was_here[i] && (reso.has(i) || reso.has(-i)) && i != k) {
+        was_here[i] = true;
+        clause.add(i);
       }
     }
   }
+
+  for (int i = 1; i <= variables; ++i) {
+    if (clause.has(i)) {
+      if (_model.value(i) == true) {
+        clause.remove(i);
+        clause.add(-i);
+      }
+    }
+  }
+
   /* to powinno jeszcze zwracac -1 
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
    */
-  add_clauses(bad_clauses);
+
+  add_clause(clause);
   std::cerr << "\tproblem @ " << ret_to_lvl << std::endl;
   return ret_to_lvl;
 }

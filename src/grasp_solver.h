@@ -31,6 +31,10 @@ class GraspSolver : public Solver {
     return up.model();
   }
 
+  const Model& solution_ref() {
+    return up.model();
+  }
+
   void solve(std::vector<Clause> _clauses) override;
 };
 

@@ -16,6 +16,9 @@ void GraspSolver::decide(int dl) {
     return;
   }
   for (Clause clause : clauses) {
+    if (model.spoiled(clause)) {
+      std::cerr << "ERRROR" << std::endl;
+    }
     int witness;
     if (model.ambivalent(clause, &witness)) {
       if (clause.has(witness)) {
@@ -36,17 +39,18 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   up.add_clauses(clauses);
   const Model& model = up.model();
 
-  if (!up.propagate(-1)) {
+  /*if (!up.propagate(-1)) {
       solved = false;
       return;
-  }
+  }*/
   // decision level
   int dl = 0;
   while (!model.all_assigned()) {
-    std::cerr << "current model " << model << std::endl;
+    std::cerr << "current model " << model << std::endl << std::flush;
+    std::cerr << up.clauses_size() << std::endl;
     decide(dl);
     dl++;
-    if (!up.propagate(dl)) {
+    while (!up.propagate(dl)) {
       int beta = up.diagnose();
       if (beta < 0) {
         solved = false;

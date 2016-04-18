@@ -21,4 +21,5 @@ int main() {
   solver.solve(clauses);
 
   std::cout << solver.solution() << std::endl;
+  return 0;
 }

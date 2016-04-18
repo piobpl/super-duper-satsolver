@@ -91,6 +91,7 @@ class Clause {
     return pos.size();
   }
 
+
   Iterator begin() const {
     size_type i = pos.find_first();
     if (i == npos) return Iterator(this, 0, neg.find_first());

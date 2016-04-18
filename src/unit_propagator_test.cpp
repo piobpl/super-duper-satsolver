@@ -153,6 +153,5 @@ TEST(UnitPropagatorTest, DiagnoseCorectness) {
   up.assume(1, false, 0);
 
   up.propagate(0);
-
   ASSERT_EQ(up.diagnose(), 0);
 }
