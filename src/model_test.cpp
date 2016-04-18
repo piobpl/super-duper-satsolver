@@ -2,7 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../src/clause.h"
+#include <tuple>
+
 #include "../src/model.h"
 
 /*
@@ -82,73 +83,75 @@ TEST(ClauseTest, ClauseManipulation) {
   ASSERT_TRUE(d.has(1));
   ASSERT_FALSE(d.has(2));
 }
+*/
 
 TEST(ModelTest, ModelManipulation) {
   Model m(100);
 
-  ASSERT_EQ(m.size(), 100);
+  for (int _i = 1; _i <= 100; ++_i) {
+    Literal i(_i);
 
-  for (int i = 1; i <= 100; ++i) {
-    SCOPED_TRACE(i);
+    SCOPED_TRACE(_i);
 
-    ASSERT_FALSE(m.is_set(i));
+    ASSERT_FALSE(m.defined(i));
 
-    m.set(i, 0);
-    ASSERT_TRUE(m.is_set(i));
-    ASSERT_TRUE(m.is_set(-i));
+    m.set(i, false);
+    ASSERT_TRUE(m.defined(i));
+    ASSERT_TRUE(m.defined(~i));
     ASSERT_FALSE(m.value(i));
 
-    m.set(-i, 0);
-    ASSERT_TRUE(m.is_set(i));
-    ASSERT_TRUE(m.is_set(-i));
+    m.set(~i, false);
+    ASSERT_TRUE(m.defined(i));
+    ASSERT_TRUE(m.defined(~i));
     ASSERT_TRUE(m.value(i));
 
-    if (i&1)
+    if (_i&1)
       m.unset(i);
     else
-      m.unset(-i);
-    ASSERT_FALSE(m.is_set(i));
+      m.unset(~i);
+    ASSERT_FALSE(m.defined(i));
 
-    if (i % 3 == 0) m.set(i, (i % 5) < 2);
+    if (_i % 3 == 0) m.set(Variable(_i), (_i % 5) < 2);
   }
 
-  Clause c(100);
-  c.add(3);
-  c.add(-51);
-  c.add(99);
+  Clause c0{+Variable(3), -Variable(51), Literal(99)};
+  Clause c1{Literal(3), Literal(-51), Literal(99), Literal(-33)};
 
-  ASSERT_FALSE(m.satisfied(c));
-  ASSERT_TRUE(m.spoiled(c));
+  ASSERT_FALSE(m.satisfied(c0));
+  ASSERT_TRUE(m.spoiled(c0));
 
-  c.add(-33);
-  ASSERT_TRUE(m.satisfied(c));
-  ASSERT_FALSE(m.spoiled(c));
+  ASSERT_TRUE(m.satisfied(c1));
+  ASSERT_FALSE(m.spoiled(c1));
 
-  c.remove(-33);
-  m.unset(51);
-  ASSERT_FALSE(m.satisfied(c));
-  ASSERT_FALSE(m.spoiled(c));
+  m.unset(Variable(51));
+  ASSERT_FALSE(m.satisfied(c0));
+  ASSERT_FALSE(m.spoiled(c0));
 
-  m.set(51, 1);
-  ASSERT_FALSE(m.satisfied(c));
-  ASSERT_TRUE(m.spoiled(c));
+  m.set(Literal(51), true);
+  ASSERT_FALSE(m.satisfied(c0));
+  ASSERT_TRUE(m.spoiled(c0));
 
   Model mp(3);
-  mp.set(1, 1);
-  mp.set(-2, 1);
+  mp.set(Variable(1), true);
+  mp.set(-Variable(2), true);
   ASSERT_FALSE(mp.all_assigned());
 
-  Clause cp(3);
-  cp.add(-1);
-  cp.add(2);
-  int i;
-  ASSERT_FALSE(mp.ambivalent(cp, &i));
-  cp.add(3);
-  ASSERT_TRUE(mp.ambivalent(cp, &i));
-  ASSERT_EQ(i, 3);
+  Clause cp0{Literal(-1), Literal(2)};
+  bool ambivalent;
+  Literal witness(1);
+  std::tie(ambivalent, witness) = mp.ambivalent(cp0);
+  ASSERT_FALSE(ambivalent);
+  Clause cp1{Literal(-1), Literal(2), Literal(3)};
+  std::tie(ambivalent, witness) = mp.ambivalent(cp1);
+  ASSERT_TRUE(ambivalent);
+  ASSERT_EQ(witness, Literal(3));
 
-  mp.set(-3, 0);
+  mp.set(Literal(-3), false);
   ASSERT_TRUE(mp.all_assigned());
-  ASSERT_FALSE(mp.ambivalent(cp, &i));
+  std::tie(ambivalent, witness) = mp.ambivalent(cp1);
+  ASSERT_FALSE(ambivalent);
+
+  std::stringstream s;
+  s << mp;
+  ASSERT_EQ(s.str(), "0=1 1=0 2=1");
 }
-*/

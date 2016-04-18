@@ -8,12 +8,21 @@
 #include <utility>
 #include <vector>
 
+class Literal;
+
 class Variable {
  public:
   // i in {1, 2, ...}
+  Variable() {}
   explicit Variable(int i) : _i(i) {}
 
-  int index() { return _i-1; }
+  int index() const { return _i-1; }
+
+  bool operator==(const Variable &b) const { return _i == b._i; }
+  bool operator!=(const Variable &b) const { return _i == b._i; }
+
+  friend Literal operator+(const Variable &v);
+  friend Literal operator-(const Variable &v);
  private:
   int _i;
 };
@@ -21,19 +30,30 @@ class Variable {
 class Literal {
  public:
   // i in {..., -2, -1} u {1, 2, ...}
+  Literal() {}
   explicit Literal(int i) : _i(i) {}
   explicit Literal(Variable v) : _i(v.index()+1) {}
 
-  Variable variable() { return Variable(std::abs(_i)); }
+  Variable variable() const { return Variable(std::abs(_i)); }
 
-  bool pos() { return _i > 0; }
+  bool pos() const { return _i > 0; }
+  bool neg() const { return _i < 0; }
 
-  bool neg() { return _i < 0; }
+  Literal operator~() const { return Literal(-_i); }
 
-  Literal operator-() { return Literal(-_i); }
+  bool operator==(const Literal &b) const { return _i == b._i; }
+  bool operator!=(const Literal &b) const { return _i == b._i; }
  private:
   int _i;
 };
+
+Literal operator+(const Variable &v) {
+  return Literal(v._i);
+}
+
+Literal operator-(const Variable &v) {
+  return Literal(-v._i);
+}
 
 typedef std::vector<Literal> Clause;
 
@@ -57,9 +77,8 @@ class Model {
   bool value(Literal x) const {
     assert(_def[x.variable().index()]);
     if (x.pos())
-      _val[x.variable().index()];
-    else
-      !_val[x.variable().index()];
+      return _val[x.variable().index()];
+    return !_val[x.variable().index()];
   }
 
   void set(Variable x, bool v) {
@@ -122,7 +141,7 @@ std::ostream& operator<<(std::ostream &out, const Model &m) {
     if (m._def[i]) {
       if (!st) out << " ";
       st = false;
-      out << i << "=" << (m._val[i]?1:0) << " ";
+      out << i << "=" << (m._val[i]?1:0);
     }
   return out;
 }
