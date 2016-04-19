@@ -14,7 +14,7 @@ TEST(ClauseTest, ClauseManipulation) {
   for (int i = 1; i <= 100; ++i) {
     SCOPED_TRACE(i);
 
-    ASSERT_TRUE(c.empty());
+    ASSERT_TRUE(c.emty());
 
     ASSERT_FALSE(c.has(i));
     c.add(i);
@@ -36,7 +36,7 @@ TEST(ClauseTest, ClauseManipulation) {
     c.remove(-i);
     ASSERT_FALSE(c.trivial());
 
-    ASSERT_TRUE(c.empty());
+    ASSERT_TRUE(c.emty());
   }
 
   c.add(3);
@@ -135,28 +135,47 @@ TEST(ModelTest, ModelManipulation) {
   m.set(Literal(51));
   ASSERT_FALSE(m.satisfied(c0));
   ASSERT_TRUE(m.spoiled(c0));
+}
 
-  Model mp(3);
-  mp.set(+Variable(1));
-  mp.set(-Variable(2));
-  ASSERT_FALSE(mp.all_assigned());
+TEST(ModelTest, ModelUtilities) {
+  Model m(3);
+  m.set(+Variable(1));
+  m.set(-Variable(2));
+  ASSERT_FALSE(m.all_assigned());
 
   Clause cp0{Literal(-1), Literal(2)};
   bool ambivalent;
   Literal witness(1);
-  std::tie(ambivalent, witness) = mp.ambivalent(cp0);
+  std::tie(ambivalent, witness) = m.ambivalent(cp0);
   ASSERT_FALSE(ambivalent);
   Clause cp1{Literal(-1), Literal(2), Literal(3)};
-  std::tie(ambivalent, witness) = mp.ambivalent(cp1);
+  std::tie(ambivalent, witness) = m.ambivalent(cp1);
   ASSERT_TRUE(ambivalent);
-  ASSERT_EQ(witness, Literal(3));
+  ASSERT_EQ(Literal(3), witness);
 
-  mp.set(-Literal(-3));
-  ASSERT_TRUE(mp.all_assigned());
-  std::tie(ambivalent, witness) = mp.ambivalent(cp1);
+  m.set(-Literal(-3));
+  ASSERT_TRUE(m.all_assigned());
+  std::tie(ambivalent, witness) = m.ambivalent(cp1);
   ASSERT_FALSE(ambivalent);
+}
 
+TEST(ModelTest, ModelOstream) {
+  Model m(3);
+  m.set(+Variable(1));
+  m.set(-Variable(2));
+  m.set(Literal(3));
   std::stringstream s;
-  s << mp;
-  ASSERT_EQ(s.str(), "1=1 2=0 3=1");
+  s << m;
+  ASSERT_EQ("1=1 2=0 3=1", s.str());
+}
+
+TEST(ModelTest, ModelVariables) {
+  Model m(3);
+  m.set(+Variable(1));
+  m.set(-Variable(2));
+  int ind = 0;
+  for (Variable v : m.variables()) {
+    ++ind;
+    ASSERT_EQ(Variable(ind), v);
+  }
 }

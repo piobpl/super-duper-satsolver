@@ -19,7 +19,7 @@ class Variable {
   int index() const { return _i-1; }
 
   bool operator==(const Variable &b) const { return _i == b._i; }
-  bool operator!=(const Variable &b) const { return _i == b._i; }
+  bool operator!=(const Variable &b) const { return _i != b._i; }
 
   friend Literal operator+(const Variable &v);
   friend Literal operator-(const Variable &v);
@@ -41,7 +41,7 @@ class Literal {
   Literal operator-() const { return Literal(-_i); }
 
   bool operator==(const Literal &b) const { return _i == b._i; }
-  bool operator!=(const Literal &b) const { return _i == b._i; }
+  bool operator!=(const Literal &b) const { return _i != b._i; }
 
   friend std::ostream& operator<<(std::ostream &out, const Literal &x);
 
@@ -55,9 +55,45 @@ Clause make_clause(std::initializer_list<int> lits);
 
 std::ostream& operator<<(std::ostream &out, const Clause &c);
 
+class VariableSet {
+ public:
+  class Iterator {
+   public:
+    explicit Iterator(int i) : _i(i) {}
+
+    bool operator!=(const Iterator &other) const { return _i != other._i; }
+
+    Variable operator*() { return Variable(_i); }
+
+    void operator++() { ++_i; }
+   private:
+    int _i;
+  };
+
+  explicit VariableSet(int cnt) : _cnt(cnt) {}
+
+  Iterator begin() { return Iterator(1); }
+
+  Iterator end() { return Iterator(_cnt + 1); }
+
+ private:
+  int _cnt;
+};
+
 class Model {
  public:
-  explicit Model(int variables) : _def(variables), _val(variables) {}
+  explicit Model(int var_count)
+    : _var_count(var_count),
+      _def(var_count),
+      _val(var_count) {}
+
+  int variable_count() {
+    return _var_count;
+  }
+
+  VariableSet variables() {
+    return VariableSet(_var_count);
+  }
 
   bool defined(Variable v) const {
     return _def[v.index()];
@@ -122,6 +158,7 @@ class Model {
   friend std::ostream& operator<<(std::ostream &out, const Model &m);
 
  private:
+  int _var_count;
   std::vector<bool> _def, _val;
 };
 

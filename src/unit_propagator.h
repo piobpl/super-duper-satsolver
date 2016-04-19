@@ -41,11 +41,13 @@ class UnitPropagator {
     return _model;
   }
 
-  void diagnose();
+  int diagnose();
 
-  void revert();
+  void revert(int decision_level);
 
  private:
+  std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
+
   void recheck();
 
   std::vector<Clause> _clauses;
