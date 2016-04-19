@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../src/clause.h"
+#include "../src/model.h"
 
 class Input {
  public:
@@ -21,15 +21,14 @@ class Input {
     assert(sscanf(buff, "p cnf %d %d", n, &m) == 2);
 
     for (int i = 0; i < m; ++i) {
-      Clause clause(*n);
+      Clause clause;
       for (;;) {
         int v;
         assert(fscanf(file, "%d", &v) == 1);
         if (v == 0) break;
-        clause.add(v);
+        clause.push_back(Literal(v));
       }
-      if (!clause.trivial())
-        clauses->push_back(clause);
+      clauses->push_back(clause);
     }
     m = static_cast<int>(clauses->size());
   }

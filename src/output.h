@@ -15,9 +15,16 @@ class Output {
   static void read(FILE* file, int n, Model* model) {
     *model = Model(n);
     for (int i = 1; i <= n; i++) {
-       int var, val;
-       assert(fscanf(file, "%d=%d ", &var, &val) == 2);
-       model->set(var, val);
+      int var, val;
+      assert(fscanf(file, "%d=%d ", &var, &val) == 2);
+      if (val == 0) {
+        model->set(Literal(-var));
+      } else if (val == 1) {
+        model->set(Literal(var));
+      } else {
+        std::cerr << "Problem is not binary!" << std::endl;
+        assert(false);
+      }
     }
   }
 };

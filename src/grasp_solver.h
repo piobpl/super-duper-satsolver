@@ -13,13 +13,6 @@
 #include "../src/unit_propagator.h"
 
 class GraspSolver : public Solver {
-  int variables;
-  UnitPropagator up;
-  std::vector<Clause> clauses;
-  bool solved;
-
-  void decide(int dl);
-
  public:
   explicit GraspSolver(int _variables): variables(_variables), up(_variables) {}
 
@@ -36,6 +29,14 @@ class GraspSolver : public Solver {
   }
 
   void solve(std::vector<Clause> _clauses) override;
+
+ private:
+  int variables;
+  UnitPropagator up;
+  std::vector<Clause> clauses;
+  bool solved;
+
+  void decide();
 };
 
 #endif  // SRC_GRASP_SOLVER_H_

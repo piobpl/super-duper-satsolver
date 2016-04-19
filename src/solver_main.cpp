@@ -6,9 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../src/clause.h"
 #include "../src/input.h"
-#include "../src/random_solver.h"
 #include "../src/grasp_solver.h"
 
 int main() {

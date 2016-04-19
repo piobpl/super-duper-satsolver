@@ -135,4 +135,7 @@ TEST(UnitPropagatorTest, DiagnoseCorectness) {
 
   ASSERT_TRUE(up.failed());
   ASSERT_EQ(3, up.diagnose());
+
+  up.revert(3);
+  ASSERT_FALSE(up.failed());
 }

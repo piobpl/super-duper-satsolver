@@ -4,25 +4,25 @@
 
 #include <vector>
 
-void GraspSolver::decide(int dl) {
+void GraspSolver::decide() {
   const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
       [&model](Clause& c) { return model.satisfied(c); })) {
     for (int i=1; i <= variables; ++i) {
       if (!model.defined(Variable(i))) {
-         up.assume(Literal(i), dl);
+         up.assume(Literal(i));
       }
     }
     return;
   }
   for (Clause clause : clauses) {
     if (model.spoiled(clause)) {
-      std::cerr << "ERRROR" << std::endl;
+      std::cerr << "ERROR" << std::endl;
     }
     bool ambivalent;
-    Literal witness(1);
+    Literal witness;
     std::tie(ambivalent, witness) = model.ambivalent(clause);
-    if (ambivalent) up.assume(witness, dl);
+    if (ambivalent) up.assume(witness);
   }
   assert(false);
 }
@@ -37,20 +37,15 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
       return;
   }*/
   // decision level
-  int dl = 0;
   while (!model.all_assigned()) {
-    std::cerr << "current model " << model << std::endl << std::flush;
-    std::cerr << up.clauses_size() << std::endl;
-    decide(dl);
-    dl++;
+    decide();
     while (up.failed()) {
       int beta = up.diagnose();
       if (beta < 0) {
         solved = false;
         return;
       } else {
-        up.backtrack(beta);
-        dl = beta;
+        up.revert(beta);
       }
     }
     std::cerr << std::endl;

@@ -71,7 +71,7 @@ void UnitPropagator::revert(int decision_level) {
       _reason[i.index()] = -1;
     }
 
-  if (decision_level > static_cast<int>(_deductions.size()))
+  if (decision_level < static_cast<int>(_deductions.size()))
     _deductions.resize(decision_level);
 
   _failed = false;
