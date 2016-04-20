@@ -1,6 +1,7 @@
 
 CC=g++
 CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static
+LDFLAGS=
 
 ALLSOURCES=$(wildcard src/*.cpp)
 
@@ -14,14 +15,14 @@ TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS)
 	@mkdir -p bin
-	$(CC) $(CXXFLAGS) -o bin/$@ $^
+	$(CC) $(CXXFLAGS) -o bin/$@ $^ $(LDFLAGS)
 
 $(OBJECTS) $(TESTS): obj/%.o : src/%.cpp
 	mkdir -p obj
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 tester:	$(OBJECTS) $(TESTS)
-	$(CC) $(CXXFLAGS) -o bin/$@ $^ -lgtest -lgcov -lgtest_main -pthread
+	$(CC) $(CXXFLAGS) -o bin/$@ $^ $(LDFLAGS) -lgtest -lgtest_main -pthread
 
 lint:
 	./scripts/cpplint.py src/*
@@ -29,18 +30,38 @@ lint:
 test: tester
 	./bin/tester
 
-coverage: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
+do_coverage: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 
-coverage: clean test
+do_coverage: LDFLAGS=-lgcov
+do_coverage: clean test
 	mkdir -p coverage
 	rm -f coverage/*
 	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
 	    --html --html-details -o coverage/report.html
-	make clean
 	@echo "Coverage statistics created in coverage/ dir"
 
+coverage:
+	-make do_coverage
+	make clean
+
+do_load: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
+	    -O0 -fprofile-arcs -ftest-coverage -static 
+do_load: LDFLAGS=-lgcov
+do_load: clean solver
+	./bin/solver < tests/uf75-0100.cnf
+	mkdir -p load
+	rm -f load/*
+	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
+	    --html --html-details -o load/report.html
+	rm -f solver_main.gcda solver_main.gcno
+	@echo "Load statistics created in load/ dir"
+
+load:
+	-make do_load
+	make clean
+
 benchmark: solver verifier
-	./scripts/benchmark.py ./bin/solver uf20-
+	./scripts/benchmark.py ./bin/solver uf75-
 
 clean:
 	rm -f obj/*
@@ -58,4 +79,4 @@ debugmake:
 
 all: lint test $(TARGETS)
 
-.PHONY: lint test coverage benchmark clean debugmake all
+.PHONY: lint test coverage do_coverage load do_load benchmark clean debugmake all
