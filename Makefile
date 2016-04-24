@@ -61,7 +61,7 @@ load:
 	make clean
 
 benchmark: solver verifier
-	./scripts/benchmark.py ./bin/solver uf75-
+	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf100-.* --time-limit 5
 
 clean:
 	rm -f obj/*
