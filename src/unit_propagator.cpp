@@ -81,9 +81,11 @@ void UnitPropagator::revert(int decision_level) {
 
   _failed = false;
 
-  for (int c = 0; c < static_cast<int>(_clauses.size()); ++c)
-    if (_watchers[c] == std::make_pair(-1, -1))
-      calculate_watchers(c);
+  std::vector<int> recalculate = _finished;
+  _finished.clear();
+
+  for (int c : recalculate)
+    calculate_watchers(c);
 
   recheck();
 }
@@ -108,11 +110,9 @@ void UnitPropagator::recheck() {
     Literal lit = -_propagation_queue.front();
     _propagation_queue.pop();
     int lit_index = lit.index();
-    std::vector<int> to_recheck;
-    to_recheck.insert(to_recheck.end(),
-      _clauses_with_literal[lit_index].begin(),
-      _clauses_with_literal[lit_index].end());
-    for (int c : to_recheck) {
+    for (int c : _clauses_with_literal[lit_index]) {
+      if (_watchers[c] == std::make_pair(-1, -1))
+        continue;
       bool found = false;
       int from = _watchers[c].second + 1;
       int size = static_cast<int>(_clauses[c].size());
@@ -121,14 +121,8 @@ void UnitPropagator::recheck() {
         if (from + i == _watchers[c].first) continue;
         Literal new_watcher = _clauses[c][from+i];
         if (!_model.defined(new_watcher) || _model.value(new_watcher)) {
-          if (lit == _clauses[c][_watchers[c].first]) {
-            _clauses_with_literal[_clauses[c][_watchers[c].first].index()]
-              .erase(c);
+          if (lit == _clauses[c][_watchers[c].first])
             _watchers[c].first = _watchers[c].second;
-          } else {
-            _clauses_with_literal[_clauses[c][_watchers[c].second].index()]
-              .erase(c);
-          }
           _watchers[c].second = from+i;
           _clauses_with_literal[new_watcher.index()].insert(c);
           found = true;
@@ -136,20 +130,19 @@ void UnitPropagator::recheck() {
         }
       }
       if (!found) {
-        _clauses_with_literal[_clauses[c][_watchers[c].first].index()]
-          .erase(c);
-        _clauses_with_literal[_clauses[c][_watchers[c].second].index()]
-          .erase(c);
         Literal deducted = _clauses[c][_watchers[c].first];
         if (lit == _clauses[c][_watchers[c].first])
           deducted = _clauses[c][_watchers[c].second];
+        _clauses_with_literal[deducted.index()].erase(c);
         _watchers[c] = std::make_pair(-1, -1);
+        _finished.push_back(c);
         if (_model.defined(deducted) && !_model.value(deducted))
           _failed = true;
         else if (!_model.defined(deducted))
           propagation_push(deducted, c);
       }
     }
+    _clauses_with_literal[lit_index].clear();
   }
 }
 
@@ -193,13 +186,15 @@ void UnitPropagator::calculate_watchers(int c) {
     }
   }
 
-  if (quality(watchers.first) != best) {
-    _failed = true;
-  } else if (quality(watchers.second) != best) {
-    propagation_push(_clauses[c][watchers.first], c);
-  } else {
+  if (quality(watchers.second) == best) {
     _watchers[c] = watchers;
     _clauses_with_literal[_clauses[c][watchers.first].index()].insert(c);
     _clauses_with_literal[_clauses[c][watchers.second].index()].insert(c);
+  } else {
+    _finished.push_back(c);
+    if (quality(watchers.first) == best)
+      propagation_push(_clauses[c][watchers.first], c);
+    else
+      _failed = true;
   }
 }
