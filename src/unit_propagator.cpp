@@ -111,8 +111,6 @@ void UnitPropagator::recheck() {
     _propagation_queue.pop();
     int lit_index = lit.index();
     for (int c : _clauses_with_literal[lit_index]) {
-      if (_watchers[c] == std::make_pair(-1, -1))
-        continue;
       bool found = false;
       int from = _watchers[c].second + 1;
       int size = static_cast<int>(_clauses[c].size());
@@ -134,7 +132,6 @@ void UnitPropagator::recheck() {
         if (lit == _clauses[c][_watchers[c].first])
           deducted = _clauses[c][_watchers[c].second];
         _clauses_with_literal[deducted.index()].erase(c);
-        _watchers[c] = std::make_pair(-1, -1);
         _finished.push_back(c);
         if (_model.defined(deducted) && !_model.value(deducted))
           _failed = true;
@@ -163,13 +160,10 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 }
 
 void UnitPropagator::calculate_watchers(int c) {
-  _watchers[c] = std::make_pair(-1, -1);
-  std::pair<int, int> watchers = std::make_pair(-1, -1);
-
+  int st = -1, st_q = -1, nd = -1, nd_q = -1;
   int best = std::numeric_limits<int>::max();
 
   auto quality = [this, c, best](int w) {
-    if (w == -1) return -1;
     Literal lit = _clauses[c][w];
     if (!_model.defined(lit) || _model.value(lit))
       return best;
@@ -178,22 +172,25 @@ void UnitPropagator::calculate_watchers(int c) {
 
   for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
     int q = quality(i);
-    if (q > quality(watchers.first)) {
-      watchers.second = watchers.first;
-      watchers.first = i;
-    } else if (q > quality(watchers.second)) {
-      watchers.second = i;
+    if (q > st_q) {
+      nd = st;
+      nd_q = st_q;
+      st = i;
+      st_q = q;
+    } else if (q > nd_q) {
+      nd = i;
+      nd_q = q;
     }
   }
 
-  if (quality(watchers.second) == best) {
-    _watchers[c] = watchers;
-    _clauses_with_literal[_clauses[c][watchers.first].index()].insert(c);
-    _clauses_with_literal[_clauses[c][watchers.second].index()].insert(c);
+  if (nd_q == best) {
+    _watchers[c] = std:: make_pair(st, nd);
+    _clauses_with_literal[_clauses[c][st].index()].insert(c);
+    _clauses_with_literal[_clauses[c][nd].index()].insert(c);
   } else {
     _finished.push_back(c);
-    if (quality(watchers.first) == best)
-      propagation_push(_clauses[c][watchers.first], c);
+    if (st_q == best)
+      propagation_push(_clauses[c][st], c);
     else
       _failed = true;
   }
