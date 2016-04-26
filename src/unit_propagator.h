@@ -59,7 +59,7 @@ class UnitPropagator {
   Model _model;
   std::vector<Clause> _clauses;
   std::vector<std::pair<int, int> > _watchers;
-  std::vector<std::vector<int> > _clauses_with_literal;
+  std::vector<std::set<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
 
   bool _failed;

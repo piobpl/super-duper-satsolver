@@ -14,7 +14,9 @@ void UnitPropagator::add_clause(const Clause &clause) {
   int c = static_cast<int>(_clauses.size());
   _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
+
   calculate_watchers(c);
+
   recheck();
 }
 
@@ -79,13 +81,9 @@ void UnitPropagator::revert(int decision_level) {
 
   _failed = false;
 
-  for (Variable var : _model.variables()) {
-    _clauses_with_literal[(+var).index()].clear();
-    _clauses_with_literal[(-var).index()].clear();
-  }
-
   for (int c = 0; c < static_cast<int>(_clauses.size()); ++c)
-    calculate_watchers(c);
+    if (_watchers[c] == std::make_pair(-1, -1))
+      calculate_watchers(c);
 
   recheck();
 }
@@ -110,25 +108,42 @@ void UnitPropagator::recheck() {
     Literal lit = -_propagation_queue.front();
     _propagation_queue.pop();
     int lit_index = lit.index();
-    std::vector<int> to_recheck = _clauses_with_literal[lit_index];
+    std::vector<int> to_recheck;
+    to_recheck.insert(to_recheck.end(),
+      _clauses_with_literal[lit_index].begin(),
+      _clauses_with_literal[lit_index].end());
     for (int c : to_recheck) {
       bool found = false;
+      int from = _watchers[c].second + 1;
       int size = static_cast<int>(_clauses[c].size());
-      for (int i = _watchers[c].second + 1; i < size; i++) {
-        Literal new_watcher = _clauses[c][i];
+      for (int i = 0; i < size - 1; i++) {
+        if (from + i == size) from -= size;
+        if (from + i == _watchers[c].first) continue;
+        Literal new_watcher = _clauses[c][from+i];
         if (!_model.defined(new_watcher) || _model.value(new_watcher)) {
-          if (lit == _clauses[c][_watchers[c].first])
+          if (lit == _clauses[c][_watchers[c].first]) {
+            _clauses_with_literal[_clauses[c][_watchers[c].first].index()]
+              .erase(c);
             _watchers[c].first = _watchers[c].second;
-          _watchers[c].second = i;
-          _clauses_with_literal[new_watcher.index()].push_back(c);
+          } else {
+            _clauses_with_literal[_clauses[c][_watchers[c].second].index()]
+              .erase(c);
+          }
+          _watchers[c].second = from+i;
+          _clauses_with_literal[new_watcher.index()].insert(c);
           found = true;
           break;
         }
       }
       if (!found) {
+        _clauses_with_literal[_clauses[c][_watchers[c].first].index()]
+          .erase(c);
+        _clauses_with_literal[_clauses[c][_watchers[c].second].index()]
+          .erase(c);
         Literal deducted = _clauses[c][_watchers[c].first];
         if (lit == _clauses[c][_watchers[c].first])
           deducted = _clauses[c][_watchers[c].second];
+        _watchers[c] = std::make_pair(-1, -1);
         if (_model.defined(deducted) && !_model.value(deducted))
           _failed = true;
         else if (!_model.defined(deducted))
@@ -155,28 +170,36 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 }
 
 void UnitPropagator::calculate_watchers(int c) {
-  int found = 0;
-  int index = 0;
+  _watchers[c] = std::make_pair(-1, -1);
   std::pair<int, int> watchers = std::make_pair(-1, -1);
-  for (Literal lit : _clauses[c]) {
-    if (!_model.defined(lit) || _model.value(lit)) {
-        if (found == 0)
-          watchers.first = index;
-        else
-          watchers.second = index;
-        found++;
-        if (found == 2) break;
-    }
-    index++;
-  }
-  _watchers[c] = watchers;
 
-  if (found == 0) {
+  int best = std::numeric_limits<int>::max();
+
+  auto quality = [this, c, best](int w) {
+    if (w == -1) return -1;
+    Literal lit = _clauses[c][w];
+    if (!_model.defined(lit) || _model.value(lit))
+      return best;
+    return _level[lit.variable().index()];
+  };
+
+  for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
+    int q = quality(i);
+    if (q > quality(watchers.first)) {
+      watchers.second = watchers.first;
+      watchers.first = i;
+    } else if (q > quality(watchers.second)) {
+      watchers.second = i;
+    }
+  }
+
+  if (quality(watchers.first) != best) {
     _failed = true;
-  } else if (found == 1) {
+  } else if (quality(watchers.second) != best) {
     propagation_push(_clauses[c][watchers.first], c);
   } else {
-    _clauses_with_literal[_clauses[c][watchers.first].index()].push_back(c);
-    _clauses_with_literal[_clauses[c][watchers.second].index()].push_back(c);
+    _watchers[c] = watchers;
+    _clauses_with_literal[_clauses[c][watchers.first].index()].insert(c);
+    _clauses_with_literal[_clauses[c][watchers.second].index()].insert(c);
   }
 }
