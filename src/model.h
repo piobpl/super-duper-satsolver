@@ -37,6 +37,10 @@ class Literal {
 
   bool pos() const { return _i > 0; }
   bool neg() const { return _i < 0; }
+  int index() const {
+    if (pos()) return 2*(_i-1);
+    return 2*(-_i-1) + 1;
+  }
 
   Literal operator-() const { return Literal(-_i); }
 

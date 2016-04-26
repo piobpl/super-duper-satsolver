@@ -11,14 +11,18 @@
 #include <vector>
 
 void UnitPropagator::add_clause(const Clause &clause) {
+  int c = static_cast<int>(_clauses.size());
   _clauses.push_back(clause);
+  _watchers.push_back(std::make_pair(-1, -1));
+  calculate_watchers(c);
   recheck();
 }
 
-void UnitPropagator::assume(Literal var) {
-  _level[var.variable().index()] = static_cast<int>(_deductions.size());
-  _deductions.push_back(std::vector<Literal>{var});
-  _model.set(var);
+void UnitPropagator::assume(Literal lit) {
+  _level[lit.variable().index()] = static_cast<int>(_deductions.size());
+  _deductions.push_back(std::vector<Literal>{lit});
+  _model.set(lit);
+  _propagation_queue.push(lit);
   recheck();
 }
 
@@ -33,7 +37,7 @@ int UnitPropagator::diagnose() {
 
   int ret_to_lvl = -1;
   std::vector<bool> was_here;
-  was_here.resize(_model.variable_count(), 0);
+  was_here.resize(_model.variable_count(), false);
   for (Literal x : clause) {
     int i = x.variable().index();
     was_here[i] = true;
@@ -58,7 +62,6 @@ int UnitPropagator::diagnose() {
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
    */
-
   add_clause(clause);
   return ret_to_lvl;
 }
@@ -75,6 +78,15 @@ void UnitPropagator::revert(int decision_level) {
     _deductions.resize(decision_level);
 
   _failed = false;
+
+  for (Variable var : _model.variables()) {
+    _clauses_with_literal[(+var).index()].clear();
+    _clauses_with_literal[(-var).index()].clear();
+  }
+
+  for (int c = 0; c < static_cast<int>(_clauses.size()); ++c)
+    calculate_watchers(c);
+
   recheck();
 }
 
@@ -94,34 +106,77 @@ std::pair<bool, Literal> UnitPropagator::extract_nonroot_literal(Clause *c) {
 }
 
 void UnitPropagator::recheck() {
-  bool change;
-  do {
-    change = false;
-    int ind = -1;
-    for (Clause c : _clauses) {
-      ++ind;
-      if (!_model.satisfied(c)) {
-        int cnt = 0;
-        Literal x;
-        int lvl = -1;
-        for (Literal v : c) {
-          lvl = std::max(lvl, _level[v.variable().index()]);
-          if (!_model.defined(v)) {
-            ++cnt;
-            x = v;
-          }
-        }
-        if (cnt == 0) {
-          _failed = true;
-        }
-        if (cnt == 1) {
-          change = true;
-          _reason[x.variable().index()] = ind;
-          _level[x.variable().index()] = lvl;
-          _deductions.back().push_back(x);
-          _model.set(x);
+  while (!_propagation_queue.empty()) {
+    Literal lit = -_propagation_queue.front();
+    _propagation_queue.pop();
+    int lit_index = lit.index();
+    std::vector<int> to_recheck = _clauses_with_literal[lit_index];
+    for (int c : to_recheck) {
+      bool found = false;
+      int size = static_cast<int>(_clauses[c].size());
+      for (int i = _watchers[c].second + 1; i < size; i++) {
+        Literal new_watcher = _clauses[c][i];
+        if (!_model.defined(new_watcher) || _model.value(new_watcher)) {
+          if (lit == _clauses[c][_watchers[c].first])
+            _watchers[c].first = _watchers[c].second;
+          _watchers[c].second = i;
+          _clauses_with_literal[new_watcher.index()].push_back(c);
+          found = true;
+          break;
         }
       }
+      if (!found) {
+        Literal deducted = _clauses[c][_watchers[c].first];
+        if (lit == _clauses[c][_watchers[c].first])
+          deducted = _clauses[c][_watchers[c].second];
+        if (_model.defined(deducted) && !_model.value(deducted))
+          _failed = true;
+        else if (!_model.defined(deducted))
+          propagation_push(deducted, c);
+      }
     }
-  } while (change);
+  }
+}
+
+void UnitPropagator::propagation_push(Literal var, int c) {
+  if (_model.defined(var)) {
+    if (!_model.value(var))
+      _failed = true;
+    return;
+  }
+  int max_level = 0;
+  for (Literal lit : _clauses[c])
+    max_level = std::max(max_level, _level[lit.variable().index()]);
+  _level[var.variable().index()] = max_level;
+  _deductions[max_level].push_back(var);
+  _reason[var.variable().index()] = c;
+  _model.set(var);
+  _propagation_queue.push(var);
+}
+
+void UnitPropagator::calculate_watchers(int c) {
+  int found = 0;
+  int index = 0;
+  std::pair<int, int> watchers = std::make_pair(-1, -1);
+  for (Literal lit : _clauses[c]) {
+    if (!_model.defined(lit) || _model.value(lit)) {
+        if (found == 0)
+          watchers.first = index;
+        else
+          watchers.second = index;
+        found++;
+        if (found == 2) break;
+    }
+    index++;
+  }
+  _watchers[c] = watchers;
+
+  if (found == 0) {
+    _failed = true;
+  } else if (found == 1) {
+    propagation_push(_clauses[c][watchers.first], c);
+  } else {
+    _clauses_with_literal[_clauses[c][watchers.first].index()].push_back(c);
+    _clauses_with_literal[_clauses[c][watchers.second].index()].push_back(c);
+  }
 }
