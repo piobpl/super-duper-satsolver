@@ -64,7 +64,10 @@ int UnitPropagator::diagnose() {
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
    */
-  add_clause(clause);
+  int c = static_cast<int>(_clauses.size());
+  _clauses.push_back(clause);
+  _watchers.push_back(std::make_pair(-1, -1));
+  _finished.push_back(c);
   return ret_to_lvl;
 }
 
@@ -84,8 +87,21 @@ void UnitPropagator::revert(int decision_level) {
   std::vector<int> recalculate = _finished;
   _finished.clear();
 
-  for (int c : recalculate)
-    calculate_watchers(c);
+  for (int c : recalculate) {
+    if (_watchers[c].first != -1) {
+      Literal a = _clauses[c][_watchers[c].first];
+      Literal b = _clauses[c][_watchers[c].second];
+      if ((!_model.defined(a) || _model.value(a)) &&
+          (!_model.defined(b) || _model.value(b))) {
+        _clauses_with_literal[a.index()].insert(c);
+        _clauses_with_literal[b.index()].insert(c);
+      } else {
+        calculate_watchers(c);
+      }
+    } else {
+      calculate_watchers(c);
+    }
+  }
 
   recheck();
 }
@@ -160,36 +176,27 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 }
 
 void UnitPropagator::calculate_watchers(int c) {
-  int st = -1, st_q = -1, nd = -1, nd_q = -1;
-  int best = std::numeric_limits<int>::max();
-
-  auto quality = [this, c, best](int w) {
-    Literal lit = _clauses[c][w];
-    if (!_model.defined(lit) || _model.value(lit))
-      return best;
-    return _level[lit.variable().index()];
-  };
+  int st = -1, nd = -1;
 
   for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
-    int q = quality(i);
-    if (q > st_q) {
-      nd = st;
-      nd_q = st_q;
-      st = i;
-      st_q = q;
-    } else if (q > nd_q) {
-      nd = i;
-      nd_q = q;
+    Literal x = _clauses[c][i];
+    if (!_model.defined(x) || _model.value(x)) {
+      if (st == -1)
+        st = i;
+      else {
+        nd = i;
+        break;
+      }
     }
   }
 
-  if (nd_q == best) {
+  if (nd != -1) {
     _watchers[c] = std:: make_pair(st, nd);
     _clauses_with_literal[_clauses[c][st].index()].insert(c);
     _clauses_with_literal[_clauses[c][nd].index()].insert(c);
   } else {
     _finished.push_back(c);
-    if (st_q == best)
+    if (st != -1)
       propagation_push(_clauses[c][st], c);
     else
       _failed = true;
