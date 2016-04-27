@@ -15,8 +15,9 @@ class Output {
   static void read(FILE* file, int n, Model* model) {
     *model = Model(n);
     for (int i = 1; i <= n; i++) {
-      int var, val;
-      assert(fscanf(file, "%d=%d ", &var, &val) == 2);
+      int var, val, t;
+      t = fscanf(file, "%d=%d ", &var, &val);
+      assert(t == 2);
       if (val == 0) {
         model->set(Literal(-var));
       } else if (val == 1) {
