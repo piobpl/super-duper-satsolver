@@ -2,6 +2,7 @@
 
 #include "../src/grasp_solver.h"
 
+#include <tuple>
 #include <vector>
 
 void GraspSolver::decide() {
