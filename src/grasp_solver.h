@@ -8,13 +8,15 @@
 #include <random>
 #include <vector>
 
+#include "../src/bohm.h"
 #include "../src/model.h"
 #include "../src/solver.h"
 #include "../src/unit_propagator.h"
 
 class GraspSolver : public Solver {
  public:
-  explicit GraspSolver(int _variables): variables(_variables), up(_variables) {}
+  explicit GraspSolver(int _variables): variables(_variables), up(_variables),
+    bohm(1., 2., .5) {}
 
   bool success() override {
     return solved;
@@ -33,6 +35,7 @@ class GraspSolver : public Solver {
  private:
   int variables;
   UnitPropagator up;
+  BOHM bohm;
   std::vector<Clause> clauses;
   bool solved;
 

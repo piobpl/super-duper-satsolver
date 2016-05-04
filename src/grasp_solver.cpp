@@ -16,18 +16,10 @@ void GraspSolver::decide() {
     }
     return;
   }
-  for (Clause clause : clauses) {
-    assert(!model.spoiled(clause));
 
-    bool ambivalent;
-    Literal witness;
-    std::tie(ambivalent, witness) = model.ambivalent(clause);
-    if (ambivalent) {
-      up.assume(witness);
-      return;
-    }
-  }
-  assert(false);
+  Variable x = bohm.pick(model, clauses);
+  up.assume(+x);
+  return;
 }
 
 void GraspSolver::solve(std::vector<Clause> _clauses) {

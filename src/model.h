@@ -91,11 +91,11 @@ class Model {
       _def(var_count),
       _val(var_count) {}
 
-  int variable_count() {
+  int variable_count() const {
     return _var_count;
   }
 
-  VariableSet variables() {
+  VariableSet variables() const {
     return VariableSet(_var_count);
   }
 
