@@ -48,7 +48,7 @@ do_load: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 
 do_load: LDFLAGS=-lgcov
 do_load: clean solver
-	./bin/solver < tests/uf75-0100.cnf
+	./bin/solver < tests/uf100-01.cnf
 	mkdir -p load
 	rm -f load/*
 	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
@@ -61,7 +61,7 @@ load:
 	make clean
 
 benchmark: solver verifier
-	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf100-.* --time-limit 5
+	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf125-.* --time-limit 5
 
 clean:
 	rm -f obj/*
