@@ -182,9 +182,9 @@ void UnitPropagator::calculate_watchers(int c) {
   for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
     Literal x = _clauses[c][i];
     if (!_model.defined(x) || _model.value(x)) {
-      if (st == -1)
+      if (st == -1) {
         st = i;
-      else {
+      } else {
         nd = i;
         break;
       }
