@@ -18,6 +18,9 @@ int main() {
   GraspSolver solver = GraspSolver(n);
   solver.solve(clauses);
 
-  std::cout << solver.solution() << std::endl;
+  if (solver.success())
+    std::cout << solver.solution() << std::endl;
+  else
+    std::cout << "UNSATISFIABLE" << std::endl;
   return 0;
 }

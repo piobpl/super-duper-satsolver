@@ -32,7 +32,7 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
     decide();
     while (up.failed()) {
       int beta = up.diagnose();
-      if (beta < 0) {
+      if (beta == 0) {
         solved = false;
         return;
       } else {
