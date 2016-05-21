@@ -33,6 +33,7 @@ class GraspSolver : public Solver {
   void solve(std::vector<Clause> _clauses) override;
 
  private:
+
   int variables;
   UnitPropagator up;
   BOHM bohm;

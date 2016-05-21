@@ -18,6 +18,8 @@ class Variable {
 
   int index() const { return _i-1; }
 
+  static Variable from_index(int index) {return Variable(index+1);}
+
   bool operator==(const Variable &b) const { return _i == b._i; }
   bool operator!=(const Variable &b) const { return _i != b._i; }
 
@@ -67,9 +69,11 @@ class VariableSet {
 
     bool operator!=(const Iterator &other) const { return _i != other._i; }
 
+    bool operator==(const Iterator &other) const { return _i == other._i; }
+
     Variable operator*() { return Variable(_i); }
 
-    void operator++() { ++_i; }
+    Iterator &operator++() { ++_i; return *this;}
    private:
     int _i;
   };

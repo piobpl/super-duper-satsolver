@@ -61,6 +61,10 @@ int UnitPropagator::diagnose() {
     }
   }
 
+  bump_activity(clause);
+
+  decay_activity();
+
   /* to powinno jeszcze zwracac -1 
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
@@ -87,7 +91,6 @@ void UnitPropagator::revert(int decision_level) {
 
   std::vector<int> recalculate = _finished;
   _finished.clear();
-
   for (int c : recalculate) {
     if (_watchers[c].first != -1) {
       Literal a = _clauses[c][_watchers[c].first];
@@ -202,4 +205,29 @@ void UnitPropagator::calculate_watchers(int c) {
     else
       _failed = true;
   }
+}
+
+Variable UnitPropagator::active_variable(){
+  auto vars = _model.variables();
+  return *std::max_element(vars.begin(), vars.end(),
+      [&](Variable v1, Variable v2){
+        return (_model.defined(v1) && !_model.defined(v2)) ||
+            (_model.defined(v1) ==_model.defined(v2)
+            && _activity[v1.index()] < _activity[v2.index()]);
+      });
+}
+
+void UnitPropagator::bump_activity(const Clause &clause){
+  for (const auto &l : clause) {
+    if ((_activity[l.variable().index()] += _var_inc) > RESCALE_THRESHOLD) {
+      for (int i = 0; i < static_cast<int>(_activity.size()); i++) {
+        _activity[i] /= RESCALE_THRESHOLD;
+      }
+      _var_inc /= RESCALE_THRESHOLD;
+    }
+  }
+}
+
+void UnitPropagator::decay_activity(){
+  _var_inc /= VAR_DECAY;
 }

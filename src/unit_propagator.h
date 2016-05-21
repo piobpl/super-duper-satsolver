@@ -19,6 +19,7 @@ class UnitPropagator {
       _failed(false),
       _reason(variables, -1),
       _level(variables, -1),
+      _activity(variables),
       _deductions(1) {}
 
   void add_clause(const Clause &clause);
@@ -47,6 +48,8 @@ class UnitPropagator {
 
   void revert(int decision_level);
 
+  Variable active_variable();
+
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
@@ -55,6 +58,11 @@ class UnitPropagator {
   void propagation_push(Literal var, int lause_pos);
 
   void calculate_watchers(int c);
+
+  void bump_activity(const Clause &);
+  void decay_activity();
+
+  void restart();
 
   Model _model;
   std::vector<Clause> _clauses;
@@ -66,6 +74,13 @@ class UnitPropagator {
   bool _failed;
   std::vector<int> _reason;
   std::vector<int> _level;
+
+  //VSIDS
+  const double VAR_DECAY = 0.95;
+  const double RESCALE_THRESHOLD = 1e100;
+  double _var_inc = 1;
+  std::vector<double> _activity;
+
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
   std::vector<std::vector<Literal>> _deductions;
