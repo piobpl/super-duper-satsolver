@@ -47,6 +47,20 @@ class UnitPropagator {
 
   void revert(int decision_level);
 
+  /**
+   * Returns a vector of (clause, index) pairs, over all clauses that can be
+   * forgotten, that is hasn't already bren forgotten and is not a reason of any
+   * value at the moment. This member function returns a different vector after
+   * each forgetting, but a clause assigned to an id doesn't change.
+   */
+  std::vector<std::pair<Clause, int>> available_clauses() const;
+
+  /**
+   * Makes the c-th clause forgotten. Behavior is undefined if ci-th clause
+   * has already been forgotten or is a reason of some value.
+   */
+  void forget_clause(int c);
+
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
@@ -66,6 +80,7 @@ class UnitPropagator {
 
   bool _failed;
   std::vector<int> _reason;
+  std::vector<int> _is_reason;
   std::vector<int> _level;
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
