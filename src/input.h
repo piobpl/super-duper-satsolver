@@ -19,14 +19,14 @@ class Input {
       t = fscanf(file, "%[^\n] ", buff);
       assert(t == 1);
     }while (buff[0] == 'c');
-    t = sscanf(buff, "p cnf %d %d", n, &m);
+    t = sscanf(buff, "p cnf %d %d ", n, &m);
     assert(t == 2);
 
     for (int i = 0; i < m; ++i) {
       Clause clause;
       for (;;) {
         int v;
-        t = fscanf(file, "%d", &v);
+        t = fscanf(file, "%d ", &v);
         assert(t == 1);
         if (v == 0) break;
         clause.push_back(Literal(v));
