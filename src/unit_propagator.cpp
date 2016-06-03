@@ -106,7 +106,7 @@ void UnitPropagator::revert(int decision_level) {
     } else {
       calculate_watchers(c);
     }
-
+  }
   recheck();
 }
 
