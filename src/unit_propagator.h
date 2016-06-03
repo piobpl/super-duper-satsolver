@@ -13,6 +13,7 @@
 
 class UnitPropagator {
  public:
+  unsigned int MAX_CLAUSES_NUM = 1000;
   explicit UnitPropagator(int variables)
     : _model(variables),
       _clauses_with_literal(2*variables),
@@ -28,6 +29,8 @@ class UnitPropagator {
       add_clause(clause);
     }
   }
+  
+  bool garbage_clauses ();
 
   void assume(Literal var);
 
@@ -44,6 +47,8 @@ class UnitPropagator {
   }
 
   int diagnose();
+  
+  void set_cl_num (int x) {clauses_num_at_start = x; }
 
   void revert(int decision_level);
 
@@ -77,7 +82,8 @@ class UnitPropagator {
   std::vector<int> _finished;
   std::vector<std::set<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
-
+  
+  int clauses_num_at_start = -1; 
   bool _failed;
   std::vector<int> _reason;
   std::vector<int> _is_reason;
