@@ -5,7 +5,6 @@
 #include <tuple>
 #include <vector>
 
-
 void GraspSolver::decide() {
   const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
@@ -24,22 +23,17 @@ void GraspSolver::decide() {
 }
 
 void GraspSolver::solve(std::vector<Clause> _clauses) {
-  std::cerr << "SOLVING SHIT" << std::endl;
   clauses = _clauses;
   up.add_clauses(clauses);
-  up.set_cl_num(clauses.size());
   const Model& model = up.model();
-  int i=1;
-  while (!model.all_assigned()) {  
-	up.garbage_clauses();
+
+  while (!model.all_assigned()) {
     assert(!up.failed());
     decide();
     while (up.failed()) {
       int beta = up.diagnose();
-      ++i;
       if (beta == 0) {
         solved = false;
-		std::cerr << up.available_clauses().size() << std::endl << std::flush;
         return;
       } else {
         up.revert(beta);
@@ -47,6 +41,5 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
     }
     assert(!up.failed());
   }
-  std::cerr << up.available_clauses().size() << std::endl << std::flush;
   solved = true;
 }
