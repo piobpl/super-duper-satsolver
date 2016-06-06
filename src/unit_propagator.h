@@ -67,6 +67,8 @@ class UnitPropagator {
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
+  bool recheck_clause(Literal, int, int);
+
   void recheck();
 
   void propagation_push(Literal var, int c);
