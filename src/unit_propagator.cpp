@@ -202,9 +202,15 @@ void UnitPropagator::calculate_watchers(int c) {
 
 std::vector<int> UnitPropagator::redundant(){
   std::vector<bool> red(_clauses.size(), true);
-  for (Variable i : _model.variables())
-    red[_reason[i.index()]] = false;
+  std::cerr << "iterating over vars" << std::endl << std::flush;
+  for (Variable i : _model.variables()){
+    std::cerr << "index = " << i.index() << " reason=" << _reason[i.index()] << std::endl << std::flush;
+	if(_reason[i.index()] != -1){
+      red[_reason[i.index()]] = false;
+	}
+  }
   std::vector<int> res;
+  std::cerr << "iterating over _base cl " << _base_clauses << std::endl << std::flush;
   for (int i = _base_clauses; i < static_cast<int>(_clauses.size()); ++i)
     if (red[i])
       res.push_back(i);
@@ -212,6 +218,12 @@ std::vector<int> UnitPropagator::redundant(){
 }
 
 void UnitPropagator::forget(const std::vector<int>& ind) {
+  for (int i : ind) {
+	for (Variable v : _model.variables())
+	  assert(_reason[v.index()] != i);
+	assert(i >= _base_clauses);
+  }
+  
   int i = 0;
   int t = _base_clauses;
   for (int c = _base_clauses; c < static_cast<int>(_clauses.size()); ++c){
@@ -220,10 +232,12 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
       if (t != c) {
         _clauses[t] = _clauses[c];
         _watchers[t] = _watchers[c];
+        ++t;
       }
     }
   }
 
+  _watchers.resize(t);
   _clauses.resize(t);
 
   for (Variable v : _model.variables()) {
@@ -232,7 +246,7 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
   }
 
   for (int c = 0; c < static_cast<int>(_clauses.size()); ++c) {
-    if (_watchers[c].first != -1) {
+    /*if (_watchers[c].first != -1) {
       Literal a = _clauses[c][_watchers[c].first];
       Literal b = _clauses[c][_watchers[c].second];
       if ((!_model.defined(a) || _model.value(a)) &&
@@ -244,7 +258,8 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
       }
     } else {
       calculate_watchers(c);
-    }
+    }*/
+	calculate_watchers(c);
   }
 }
 
@@ -263,15 +278,20 @@ bool UnitPropagator::garbage_clauses_glucose() {
 	  return true;
   }
   int to_remove = (_clauses.size() - MAX_CLAUSES_NUM/2);
+  std::cerr << "BEFORE redundant()" << std::endl << std::flush;
   auto av_cl = redundant();
+  
+  std::cerr << "after redundant()" << std::endl << std::flush;
   std::vector<std::pair<int, int> > arr_to_sort;
-  assert(clauses_num_at_start != -1);
+  std::cerr << "is_set" << std::endl << std::flush;
+  std::cerr << "iterating over indices" << std::endl << std::flush;
   for (int ind : av_cl) {
     Clause& cl = _clauses[ind];
-    assert(ind >= clauses_num_at_start);
+    assert(ind >= _base_clauses);
     arr_to_sort.push_back(
     std::pair<int, int> (ind, glucose_factor(cl)));     
   } 
+  std::cerr << "BEFORE sort()" << std::endl << std::flush;
   std::sort(arr_to_sort.begin(), arr_to_sort.end(),
   [](std::pair<int, int> x, std::pair<int, int> y)
                       {return x.second > y.second;});
@@ -280,7 +300,9 @@ bool UnitPropagator::garbage_clauses_glucose() {
   for (i=0; i < to_remove && i<static_cast<int>(arr_to_sort.size()); i++) {
     to_rem.push_back(arr_to_sort[i].first);
   }
+  std::sort(to_rem.begin(), to_rem.end());
   forget(to_rem);
+  std::cerr << "AFTER forget()" << std::endl << std::flush;
   return true;
   /*
   if (static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM) {

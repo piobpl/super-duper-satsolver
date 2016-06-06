@@ -13,7 +13,7 @@
 
 class UnitPropagator {
  public:
-  int MAX_CLAUSES_NUM = 1000;
+  int MAX_CLAUSES_NUM = 2000;
   explicit UnitPropagator(int variables, int base_clauses)
     : _base_clauses(base_clauses),
       _model(variables),
@@ -57,10 +57,6 @@ class UnitPropagator {
   
   bool garbage_clauses_glucose();
   
-  void set_cl_num (int x){
-	  clauses_num_at_start = x;
-  }
-  
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
@@ -79,7 +75,6 @@ class UnitPropagator {
   std::vector<std::pair<int, int> > _watchers;
   std::vector<std::vector<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
-  int clauses_num_at_start = -1;
   bool _failed;
   std::vector<int> _reason;
   std::vector<int> _level;
