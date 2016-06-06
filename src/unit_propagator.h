@@ -13,7 +13,7 @@
 
 class UnitPropagator {
  public:
-  int MAX_CLAUSES_NUM = 2000;
+  int MAX_CLAUSES_NUM = 500;
   explicit UnitPropagator(int variables, int base_clauses)
     : _base_clauses(base_clauses),
       _model(variables),
@@ -56,6 +56,8 @@ class UnitPropagator {
   void forget(const std::vector<int>& ind);
   
   bool garbage_clauses_glucose();
+  
+  bool garbage_clauses_grasp();
   
   bool garbage_clauses_all();
 

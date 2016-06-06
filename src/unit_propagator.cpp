@@ -273,10 +273,10 @@ bool UnitPropagator::garbage_clauses_all() {
 }
 
 bool UnitPropagator::garbage_clauses_glucose() {
-  if(static_cast<int>(_clauses.size() < MAX_CLAUSES_NUM)){
+  if(static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM){
 	  return true;
   }
-  int to_remove = (_clauses.size() - MAX_CLAUSES_NUM/2);
+  int to_remove = (static_cast<int>(_clauses.size()) - MAX_CLAUSES_NUM/2);
   auto av_cl = redundant();
   
   std::vector<std::pair<int, int> > arr_to_sort;
@@ -294,51 +294,27 @@ bool UnitPropagator::garbage_clauses_glucose() {
   for (i=0; i < to_remove && i<static_cast<int>(arr_to_sort.size()); i++) {
     to_rem.push_back(arr_to_sort[i].first);
   }
+  if ( i== static_cast<int> (arr_to_sort.size()) ){
+	  MAX_CLAUSES_NUM += 100;
+  }
   std::sort(to_rem.begin(), to_rem.end());
   forget(to_rem);
   return true;
-  /*
-  if (static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM) {
-    return true;
-  }
-
-  int to_remove = (static_cast<int>(_clauses.size()) - MAX_CLAUSES_NUM/2);
-  auto avail_cl = available_clauses();
-  std::vector<std::pair<int, int> > arr_to_sort;
-  assert(clauses_num_at_start != -1);
-  for (int ind : avail_cl) {
-    Clause& cl = _clauses[ind];
-    assert(ind >= clauses_num_at_start);
-    arr_to_sort.push_back(
-    std::pair<int, int> (ind, glucose_factor(cl)));
-  }
-  std::sort(arr_to_sort.begin(), arr_to_sort.end(),
-  [](std::pair<int, int> x, std::pair<int, int> y)
-                      {return x.second > y.second;});
-  int i;
-  for (i=0; i < to_remove && i<static_cast<int>(arr_to_sort.size()); i++) {
-    forget_clause(arr_to_sort[i].first);
-  }
-  if ( i == static_cast<int>(arr_to_sort.size()) ) {
-      std::cerr << "RESIZING: " << MAX_CLAUSES_NUM << std::endl;
-	  MAX_CLAUSES_NUM *= 2;
-  }
-  return true;*/
 }
 
-/*bool UnitPropagator::garbage_clauses_grasp() {
+bool UnitPropagator::garbage_clauses_grasp() {
   if (static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM) {
     return true;
   }
-  auto avail_cl = available_clauses();
+  auto avail_cl = redundant();
+  std::vector<int> indices;
   std::vector<std::pair<int, int> > arr_to_sort;
-  assert(clauses_num_at_start != -1);
   for (int ind : avail_cl) {
     Clause& cl = _clauses[ind];
-    assert(ind >= clauses_num_at_start);
-    if (cl.size() > 8) {
-      forget_clause(ind);
+    if (cl.size() > 3) {
+      indices.push_back(ind);
     }
+    forget(indices);
   }
   return true;
-}*/
+}
