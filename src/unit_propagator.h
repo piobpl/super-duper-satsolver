@@ -50,10 +50,10 @@ class UnitPropagator {
   }
 
   int diagnose();
-
+  
   int glucose_factor(const Clause& cl);
-
-  void set_cl_num(int x) {clauses_num_at_start = x; }
+  
+  void set_cl_num (int x) {clauses_num_at_start = x; }
 
   void revert(int decision_level);
 
@@ -86,7 +86,7 @@ class UnitPropagator {
   std::unordered_set<int> _finished;
   std::vector<std::set<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
-
+  
   int clauses_num_at_start = -1;
   int all_clauses_count = 0;
   bool _failed;

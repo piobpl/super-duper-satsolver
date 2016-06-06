@@ -29,9 +29,9 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   up.add_clauses(clauses);
   up.set_cl_num(static_cast<int>(clauses.size()));
   const Model& model = up.model();
-  int i = 1;
-  while (!model.all_assigned()) {
-    up.garbage_clauses_grasp();
+  int i=1;
+  while (!model.all_assigned()) {  
+	up.garbage_clauses_grasp();
     assert(!up.failed());
     decide();
     while (up.failed()) {
@@ -39,7 +39,7 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
       ++i;
       if (beta == 0) {
         solved = false;
-        std::cerr << up.available_clauses().size() << std::endl << std::flush;
+		std::cerr << up.available_clauses().size() << std::endl << std::flush;
         return;
       } else {
         up.revert(beta);
