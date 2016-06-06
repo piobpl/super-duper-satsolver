@@ -1,6 +1,7 @@
 
 CC=g++
-CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static -g
+CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion -O2 -static
+#CXXFLAGS=-Wall -Wextra -pedantic -std=c++11 -O0 -Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wlogical-op -Wcast-qual -Wcast-align -D_FORTIFY_SOURCE=2 -fsanitize=address -fstack-protector
 LDFLAGS=
 
 ALLSOURCES=$(wildcard src/*.cpp)

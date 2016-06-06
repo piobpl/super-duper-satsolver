@@ -57,12 +57,14 @@ class UnitPropagator {
   
   bool garbage_clauses_glucose();
   
+  bool garbage_clauses_all();
+
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
   void recheck();
 
-  void propagation_push(Literal var, int lause_pos);
+  void propagation_push(Literal var, int c);
   
   int glucose_factor(const Clause& cl);
 
