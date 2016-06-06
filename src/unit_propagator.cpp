@@ -65,10 +65,8 @@ int UnitPropagator::diagnose() {
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
    */
-  int c = static_cast<int>(_clauses.size());
   _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
-  _finished.push_back(c);
   return ret_to_lvl;
 }
 
@@ -85,17 +83,19 @@ void UnitPropagator::revert(int decision_level) {
 
   _failed = false;
 
-  std::vector<int> recalculate = _finished;
-  _finished.clear();
+  for (Variable i : _model.variables()) {
+    _clauses_with_literal[(+i).index()].clear();
+    _clauses_with_literal[(-i).index()].clear();
+  }
 
-  for (int c : recalculate) {
+  for (int c = 0; c < static_cast<int>(_clauses.size()); ++c) {
     if (_watchers[c].first != -1) {
       Literal a = _clauses[c][_watchers[c].first];
       Literal b = _clauses[c][_watchers[c].second];
       if ((!_model.defined(a) || _model.value(a)) &&
           (!_model.defined(b) || _model.value(b))) {
-        _clauses_with_literal[a.index()].insert(c);
-        _clauses_with_literal[b.index()].insert(c);
+        _clauses_with_literal[a.index()].push_back(c);
+        _clauses_with_literal[b.index()].push_back(c);
       } else {
         calculate_watchers(c);
       }
@@ -139,7 +139,7 @@ void UnitPropagator::recheck() {
           if (lit == _clauses[c][_watchers[c].first])
             _watchers[c].first = _watchers[c].second;
           _watchers[c].second = from+i;
-          _clauses_with_literal[new_watcher.index()].insert(c);
+          _clauses_with_literal[new_watcher.index()].push_back(c);
           found = true;
           break;
         }
@@ -148,15 +148,12 @@ void UnitPropagator::recheck() {
         Literal deducted = _clauses[c][_watchers[c].first];
         if (lit == _clauses[c][_watchers[c].first])
           deducted = _clauses[c][_watchers[c].second];
-        _clauses_with_literal[deducted.index()].erase(c);
-        _finished.push_back(c);
         if (_model.defined(deducted) && !_model.value(deducted))
           _failed = true;
         else if (!_model.defined(deducted))
           propagation_push(deducted, c);
       }
     }
-    _clauses_with_literal[lit_index].clear();
   }
 }
 
@@ -193,13 +190,60 @@ void UnitPropagator::calculate_watchers(int c) {
 
   if (nd != -1) {
     _watchers[c] = std:: make_pair(st, nd);
-    _clauses_with_literal[_clauses[c][st].index()].insert(c);
-    _clauses_with_literal[_clauses[c][nd].index()].insert(c);
+    _clauses_with_literal[_clauses[c][st].index()].push_back(c);
+    _clauses_with_literal[_clauses[c][nd].index()].push_back(c);
   } else {
-    _finished.push_back(c);
     if (st != -1)
       propagation_push(_clauses[c][st], c);
     else
       _failed = true;
+  }
+}
+
+std::vector<int> UnitPropagator::redundant(){
+  std::vector<bool> red(_clauses.size(), true);
+  for (Variable i : _model.variables())
+    red[_reason[i.index()]] = false;
+  std::vector<int> res;
+  for (int i = _base_clauses; i < static_cast<int>(_clauses.size()); ++i)
+    if (red[i])
+      res.push_back(i);
+  return res;
+}
+
+void UnitPropagator::forget(const std::vector<int>& ind) {
+  int i = 0;
+  int t = _base_clauses;
+  for (int c = _base_clauses; c < static_cast<int>(_clauses.size()); ++c){
+    while (i < static_cast<int>(ind.size()) && ind[i] < c) ++i;
+    if (i == static_cast<int>(ind.size()) || ind[i] > c) {
+      if (t != c) {
+        _clauses[t] = _clauses[c];
+        _watchers[t] = _watchers[c];
+      }
+    }
+  }
+
+  _clauses.resize(t);
+
+  for (Variable v : _model.variables()) {
+    _clauses_with_literal[(+v).index()].clear();
+    _clauses_with_literal[(-v).index()].clear();
+  }
+
+  for (int c = 0; c < static_cast<int>(_clauses.size()); ++c) {
+    if (_watchers[c].first != -1) {
+      Literal a = _clauses[c][_watchers[c].first];
+      Literal b = _clauses[c][_watchers[c].second];
+      if ((!_model.defined(a) || _model.value(a)) &&
+          (!_model.defined(b) || _model.value(b))) {
+        _clauses_with_literal[a.index()].push_back(c);
+        _clauses_with_literal[b.index()].push_back(c);
+      } else {
+        calculate_watchers(c);
+      }
+    } else {
+      calculate_watchers(c);
+    }
   }
 }

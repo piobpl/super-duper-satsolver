@@ -15,7 +15,7 @@ int main() {
 
   Input::read(stdin, &n, &clauses);
 
-  GraspSolver solver = GraspSolver(n);
+  GraspSolver solver = GraspSolver(n, static_cast<int>(clauses.size()));
   solver.solve(clauses);
 
   if (solver.success())

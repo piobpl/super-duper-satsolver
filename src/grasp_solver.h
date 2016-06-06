@@ -15,7 +15,8 @@
 
 class GraspSolver : public Solver {
  public:
-  explicit GraspSolver(int _variables): variables(_variables), up(_variables),
+  explicit GraspSolver(int _variables, int _base_clauese)
+    : variables(_variables), up(_variables, _base_clauese),
     bohm(1., 2., .5) {}
 
   bool success() override {

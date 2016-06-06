@@ -13,8 +13,9 @@
 
 class UnitPropagator {
  public:
-  explicit UnitPropagator(int variables)
-    : _model(variables),
+  explicit UnitPropagator(int variables, int base_clauses)
+    : _base_clauses(base_clauses),
+      _model(variables),
       _clauses_with_literal(2*variables),
       _failed(false),
       _reason(variables, -1),
@@ -47,6 +48,11 @@ class UnitPropagator {
 
   void revert(int decision_level);
 
+  const std::vector<Clause>& clauses() { return _clauses; }
+
+  std::vector<int> redundant();
+
+  void forget(const std::vector<int>& ind);
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
@@ -56,11 +62,12 @@ class UnitPropagator {
 
   void calculate_watchers(int c);
 
+  int _base_clauses;
+
   Model _model;
   std::vector<Clause> _clauses;
   std::vector<std::pair<int, int> > _watchers;
-  std::vector<int> _finished;
-  std::vector<std::set<int> > _clauses_with_literal;
+  std::vector<std::vector<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
 
   bool _failed;
