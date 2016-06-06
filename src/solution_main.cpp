@@ -30,7 +30,10 @@ void solve(){
 
 int main() {
   int z;
-  scanf("%d ", &z);
+  if(!scanf("%d ", &z)){
+	  std::cerr << "BAD INPUT" << std::endl;
+	  return -1;
+  }
   while(z--) solve();
   return 0;
 }

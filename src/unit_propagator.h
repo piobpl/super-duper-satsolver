@@ -15,7 +15,7 @@
 
 class UnitPropagator {
  public:
-  unsigned int MAX_CLAUSES_NUM = 1000;
+  int MAX_CLAUSES_NUM = 1000;
   explicit UnitPropagator(int variables)
     : _model(variables),
       _clauses_with_literal(2*variables),
@@ -32,7 +32,8 @@ class UnitPropagator {
     }
   }
 
-  bool garbage_clauses ();
+  bool garbage_clauses_glucose();
+  bool garbage_clauses_grasp();
 
   void assume(Literal var);
 
@@ -50,17 +51,19 @@ class UnitPropagator {
 
   int diagnose();
   
+  int glucose_factor(const Clause& cl);
+  
   void set_cl_num (int x) {clauses_num_at_start = x; }
 
   void revert(int decision_level);
 
   /**
-   * Returns a vector of (clause, index) pairs, over all clauses that can be
-   * forgotten, that is hasn't already bren forgotten and is not a reason of any
+   * Returns a vector of indices, of all clauses that can be forgotten,
+   * that is hasn't already bren forgotten and is not a reason of any
    * value at the moment. This member function returns a different vector after
    * each forgetting, but a clause assigned to an id doesn't change.
    */
-  std::vector<std::pair<Clause, int>> available_clauses() const;
+  std::vector<int> available_clauses() const;
 
   /**
    * Makes the c-th clause forgotten. Behavior is undefined if ci-th clause

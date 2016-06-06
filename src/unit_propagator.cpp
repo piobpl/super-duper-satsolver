@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+
 void UnitPropagator::add_clause(const Clause &clause) {
   int c = all_clauses_count++;
   _clauses[c] = clause;
@@ -211,12 +212,12 @@ void UnitPropagator::calculate_watchers(int c) {
   }
 }
 
-std::vector<std::pair<Clause, int>> UnitPropagator::available_clauses() const {
-  std::vector<std::pair<Clause, int>> clauses;
+std::vector<int> UnitPropagator::available_clauses() const {
+  std::vector<int> clauses;
   for (const std::pair<const int, Clause> &clause_it : _clauses) {
     if (clause_it.first >= clauses_num_at_start
         && !_is_reason[clause_it.first]) {
-      clauses.emplace_back(clause_it.second, clause_it.first);
+      clauses.emplace_back(clause_it.first);
     }
   }
   return clauses;
@@ -232,40 +233,55 @@ void UnitPropagator::forget_clause(int c) {
   _finished.erase(c);
 }
 
-int glucose_factor(const Clause& cl){
-	std::set<int> dec_lvl;
-	return 1;
+int UnitPropagator::glucose_factor(const Clause& cl){
+	std::set<int> ids;
+	for(const Literal& l: cl){
+		if(_model.defined(l.variable())){
+			ids.insert(_reason[l.index()]);
+		}
+	}
+	return static_cast<int>(ids.size());
 }
 
-bool UnitPropagator::garbage_clauses(){
-	if(_clauses.size() < MAX_CLAUSES_NUM){
+bool UnitPropagator::garbage_clauses_glucose(){
+	if(static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM){
 		return true;
 	}
-	auto av_cl = available_clauses();
-	unsigned int to_remove = _clauses.size() - MAX_CLAUSES_NUM/2;
+	
+	int to_remove = (static_cast<int>(_clauses.size()) - MAX_CLAUSES_NUM/2);
 	auto avail_cl = available_clauses();
-	//first int is an index of clause. The second is the glucose_factor
 	std::vector<std::pair<int, int> > arr_to_sort;
 	assert(clauses_num_at_start != -1);
-	int it_rem = 0;
-	for(auto& cl: avail_cl){
-		if(cl.second >= clauses_num_at_start){
-			forget_clause(cl.second);
-			++it_rem;
-			/*arr_to_sort.push_back(
-				std::pair<int, int> (cl.second, glucose_factor(cl.first)));*/
-		}
-		if(it_rem >= to_remove){
-			return true;
+	for(int ind: avail_cl){
+		Clause& cl = _clauses[ind];
+		assert(ind >= clauses_num_at_start);
+		arr_to_sort.push_back(
+		std::pair<int, int> (ind, glucose_factor(cl)));
+	}
+	std::sort(arr_to_sort.begin(), arr_to_sort.end(),
+	[](std::pair<int, int> x, std::pair<int, int> y)
+									{return x.second > y.second;}); 
+		
+	int i;							
+	for(i=0; i < to_remove && i<static_cast<int>(arr_to_sort.size()); i++) {
+		forget_clause(arr_to_sort[i].first);
+	}
+	return true;	
+}
+
+bool UnitPropagator::garbage_clauses_grasp(){
+	if(static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM){
+		return true;
+	}
+	auto avail_cl = available_clauses();
+	std::vector<std::pair<int, int> > arr_to_sort;
+	assert(clauses_num_at_start != -1);
+	for(int ind: avail_cl){
+		Clause& cl = _clauses[ind];
+		assert(ind >= clauses_num_at_start);
+		if(cl.size() > 3){
+			forget_clause(ind);
 		}
 	}
 	return true;
-	/*return true;*/
-	/*std::sort(arr_to_sort.begin(), arr_to_sort.end(),
-	[](std::pair<int, int> x, std::pair<int, int> y)
-									{return x.second > y.second;}); 
-									
-	for(int i=0; i < to_remove && i<arr_to_sort.size(); i++) {
-		forget_clause(arr_to_sort[i].first);
-	}*/
 }
