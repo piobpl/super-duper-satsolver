@@ -65,11 +65,12 @@ class VariableSet {
    public:
     explicit Iterator(int i) : _i(i) {}
 
+    bool operator==(const Iterator &other) const { return _i == other._i; }
     bool operator!=(const Iterator &other) const { return _i != other._i; }
 
     Variable operator*() { return Variable(_i); }
 
-    void operator++() { ++_i; }
+    Iterator& operator++() { ++_i; return *this; }
    private:
     int _i;
   };

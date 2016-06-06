@@ -21,6 +21,7 @@ class UnitPropagator {
       _failed(false),
       _reason(variables, -1),
       _level(variables, -1),
+      _activity(variables),
       _deductions(1) {}
 
   void add_clause(const Clause &clause);
@@ -49,6 +50,8 @@ class UnitPropagator {
 
   void revert(int decision_level);
 
+  Variable active_variable();
+
   const std::vector<Clause>& clauses() { return _clauses; }
 
   std::vector<int> redundant();
@@ -72,6 +75,12 @@ class UnitPropagator {
 
   void calculate_watchers(int c);
 
+  void bump_activity(const Clause &);
+
+  void decay_activity();
+
+  void restart();
+
   int _base_clauses;
 
   Model _model;
@@ -82,6 +91,11 @@ class UnitPropagator {
   bool _failed;
   std::vector<int> _reason;
   std::vector<int> _level;
+
+  const double VAR_DECAY = 0.95;
+  const double RESCALE_THRESHOLD = 1e100;
+  double _var_inc = 1;
+  std::vector<double> _activity;
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
   std::vector<std::vector<Literal>> _deductions;

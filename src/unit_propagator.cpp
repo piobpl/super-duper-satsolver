@@ -61,9 +61,37 @@ int UnitPropagator::diagnose() {
     }
   }
 
+  bump_activity(clause);
+  decay_activity();
+
   _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
   return ret_to_lvl;
+}
+
+Variable UnitPropagator::active_variable() {
+  auto vars = _model.variables();
+  return *std::max_element(vars.begin(), vars.end(),
+      [&](Variable v1, Variable v2) {
+        return (_model.defined(v1) && !_model.defined(v2)) ||
+            (_model.defined(v1) ==_model.defined(v2)
+            && _activity[v1.index()] < _activity[v2.index()]);
+      });
+}
+
+void UnitPropagator::bump_activity(const Clause &clause) {
+  for (const auto &l : clause) {
+    if ((_activity[l.variable().index()] += _var_inc) > RESCALE_THRESHOLD) {
+      for (int i = 0; i < static_cast<int>(_activity.size()); i++) {
+        _activity[i] /= RESCALE_THRESHOLD;
+      }
+      _var_inc /= RESCALE_THRESHOLD;
+    }
+  }
+}
+
+void UnitPropagator::decay_activity() {
+  _var_inc /= VAR_DECAY;
 }
 
 void UnitPropagator::revert(int decision_level) {

@@ -17,7 +17,7 @@ void GraspSolver::decide() {
     return;
   }
 
-  Variable x = bohm.pick(model, clauses);
+  Variable x = up.active_variable();
   up.assume(+x);
   return;
 }
