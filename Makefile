@@ -8,17 +8,10 @@ ALLSOURCES=$(wildcard src/*.cpp)
 MAINSOURCES=$(wildcard src/*_main.cpp)
 TESTSOURCES=$(wildcard src/*_test.cpp)
 
-TARGETS=$(filter-out solution, $(patsubst src/%_main.cpp,%,$(MAINSOURCES)))
+TARGETS=$(patsubst src/%_main.cpp,%,$(MAINSOURCES))
 SOURCES=$(filter-out $(MAINSOURCES) $(TESTSOURCES),$(ALLSOURCES))
 OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
-
-solution: src/solution_main.cpp $(SOURCES)
-	$(CC) $(CXXFLAGS) -o solution $^ $(LDFLAGS)
-
-zip:
-	rm -f submit.zip
-	zip submit.zip src/solution_main.cpp src/*.h $(SOURCES) Makefile
 
 $(TARGETS): % : src/%_main.cpp $(OBJECTS)
 	@mkdir -p bin
@@ -71,7 +64,6 @@ benchmark: solver verifier
 	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf125-.* --time-limit 5
 
 clean:
-	rm -f solution submit.zip
 	rm -f obj/*
 	rm -f $(patsubst %,bin/%,$(TARGETS) tester)
 
@@ -87,4 +79,4 @@ debugmake:
 
 all: lint test $(TARGETS)
 
-.PHONY: zip lint test coverage do_coverage load do_load benchmark clean debugmake all
+.PHONY: lint test coverage do_coverage load do_load benchmark clean debugmake all
