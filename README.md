@@ -10,3 +10,4 @@ Super duper satsolver
 
 ##### uf125, TL=5s
  - @c4cc01f 77/100 solved, 335s total
+ - @f7f446f 100/100 solved, 74s total
