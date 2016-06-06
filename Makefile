@@ -56,7 +56,7 @@ do_load: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 
 do_load: LDFLAGS=-lgcov
 do_load: clean solver
-	./bin/solver < tests/uf100-01.cnf
+	./bin/solver < tests/uf125-01.cnf
 	mkdir -p load
 	rm -f load/*
 	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \

@@ -196,12 +196,12 @@ void UnitPropagator::calculate_watchers(int c) {
   }
 }
 
-std::vector<int> UnitPropagator::redundant(){
+std::vector<int> UnitPropagator::redundant() {
   std::vector<bool> red(_clauses.size(), true);
-  for (Variable i : _model.variables()){
-  	if(_reason[i.index()] != -1){
+  for (Variable i : _model.variables()) {
+    if (_reason[i.index()] != -1) {
         red[_reason[i.index()]] = false;
-  	}
+    }
   }
   std::vector<int> res;
   for (int i = _base_clauses; i < static_cast<int>(_clauses.size()); ++i)
@@ -212,10 +212,10 @@ std::vector<int> UnitPropagator::redundant(){
 
 void UnitPropagator::forget(const std::vector<int>& ind) {
   std::vector<int> new_id(_clauses.size(), -1);
-  
+
   int i = 0;
   int t = _base_clauses;
-  for (int c = _base_clauses; c < static_cast<int>(_clauses.size()); ++c){
+  for (int c = _base_clauses; c < static_cast<int>(_clauses.size()); ++c) {
     while (i < static_cast<int>(ind.size()) && ind[i] < c) ++i;
     if (i == static_cast<int>(ind.size()) || ind[i] > c) {
       new_id[c] = t;
@@ -265,7 +265,7 @@ int UnitPropagator::glucose_factor(const Clause& cl) {
     }
   }
   return static_cast<int>(ids.size());
-};
+}
 
 bool UnitPropagator::garbage_clauses_all() {
   forget(redundant());
@@ -273,19 +273,19 @@ bool UnitPropagator::garbage_clauses_all() {
 }
 
 bool UnitPropagator::garbage_clauses_glucose() {
-  if(static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM){
-	  return true;
+  if (static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM) {
+    return true;
   }
   int to_remove = (static_cast<int>(_clauses.size()) - MAX_CLAUSES_NUM/2);
   auto av_cl = redundant();
-  
+
   std::vector<std::pair<int, int> > arr_to_sort;
   for (int ind : av_cl) {
     Clause& cl = _clauses[ind];
     assert(ind >= _base_clauses);
     arr_to_sort.push_back(
-    std::pair<int, int> (ind, glucose_factor(cl)));     
-  } 
+    std::pair<int, int> (ind, glucose_factor(cl)));
+  }
   std::sort(arr_to_sort.begin(), arr_to_sort.end(),
   [](std::pair<int, int> x, std::pair<int, int> y)
                       {return x.second > y.second;});
@@ -294,8 +294,8 @@ bool UnitPropagator::garbage_clauses_glucose() {
   for (i=0; i < to_remove && i<static_cast<int>(arr_to_sort.size()); i++) {
     to_rem.push_back(arr_to_sort[i].first);
   }
-  if ( i== static_cast<int> (arr_to_sort.size()) ){
-	  MAX_CLAUSES_NUM += 100;
+  if ( i== static_cast<int> (arr_to_sort.size()) ) {
+    MAX_CLAUSES_NUM += 100;
   }
   std::sort(to_rem.begin(), to_rem.end());
   forget(to_rem);

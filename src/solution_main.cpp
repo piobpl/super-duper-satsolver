@@ -9,7 +9,7 @@
 #include "../src/input.h"
 #include "../src/grasp_solver.h"
 
-void solve(){
+void solve() {
   int n;
   std::vector<Clause> clauses;
 
@@ -24,13 +24,14 @@ void solve(){
     for (Variable v : solution.variables())
       std::cout << (solution.value(v) ? +v : -v) << " ";
     std::cout << "0" << std::endl;
-  } else
+  } else {
     std::cout << "UNSAT" << std::endl;
+  }
 }
 
 int main() {
   int z;
   scanf("%d ", &z);
-  while(z--) solve();
+  while (z--) solve();
   return 0;
 }

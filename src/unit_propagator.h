@@ -54,11 +54,11 @@ class UnitPropagator {
   std::vector<int> redundant();
 
   void forget(const std::vector<int>& ind);
-  
+
   bool garbage_clauses_glucose();
-  
+
   bool garbage_clauses_grasp();
-  
+
   bool garbage_clauses_all();
 
  private:
@@ -67,7 +67,7 @@ class UnitPropagator {
   void recheck();
 
   void propagation_push(Literal var, int c);
-  
+
   int glucose_factor(const Clause& cl);
 
   void calculate_watchers(int c);
