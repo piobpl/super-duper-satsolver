@@ -27,11 +27,11 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   std::cerr << "SOLVING SHIT" << std::endl;
   clauses = _clauses;
   up.add_clauses(clauses);
-  up.set_cl_num(static_cast<int>(clauses.size()));
+  up.set_cl_num(clauses.size());
   const Model& model = up.model();
   int i=1;
   while (!model.all_assigned()) {  
-	up.garbage_clauses_grasp();
+	up.garbage_clauses();
     assert(!up.failed());
     decide();
     while (up.failed()) {
