@@ -57,8 +57,7 @@ class UnitPropagator {
   void calculate_watchers(int c);
 
   Model _model;
-  std::vector<std::pair<Clause, int> > _clauses;
-  std::vector<int> _clause_index;
+  std::vector<Clause> _clauses;
   std::vector<std::pair<int, int> > _watchers;
   std::vector<int> _finished;
   std::vector<std::set<int> > _clauses_with_literal;

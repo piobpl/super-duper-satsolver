@@ -12,9 +12,8 @@
 #include <vector>
 
 void UnitPropagator::add_clause(const Clause &clause) {
-  int c = static_cast<int>(_clause_index.size());
-  _clauses.emplace_back(clause, c);
-  _clause_index.push_back(c);
+  int c = static_cast<int>(_clauses.size());
+  _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
 
   calculate_watchers(c);
@@ -32,9 +31,9 @@ void UnitPropagator::assume(Literal lit) {
 
 int UnitPropagator::diagnose() {
   Clause clause;
-  for (const std::pair<Clause, int> &clause_it : _clauses) {
-    if (_model.spoiled(clause_it.first)) {
-      clause = clause_it.first;
+  for (Clause clause_it : _clauses) {
+    if (_model.spoiled(clause_it)) {
+      clause = clause_it;
       break;
     }
   }
@@ -51,7 +50,7 @@ int UnitPropagator::diagnose() {
   bool got;
   Literal x;
   while (std::tie(got, x) = extract_nonroot_literal(&clause), got) {
-    Clause& reso = _clauses[_clause_index[_reason[x.variable().index()]]].first;
+    Clause& reso = _clauses[_reason[x.variable().index()]];
     for (Literal y : reso) {
       int i = y.variable().index();
       if (!was_here[i] && x.variable() != y.variable()) {
@@ -66,9 +65,8 @@ int UnitPropagator::diagnose() {
    * gdy zmienna na poziomie 0 od razu daje sprzecznosc
    * prosty fix na jutro
    */
-  int c = static_cast<int>(_clause_index.size());
-  _clauses.emplace_back(clause, c);
-  _clause_index.push_back(c);
+  int c = static_cast<int>(_clauses.size());
+  _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
   _finished.push_back(c);
   return ret_to_lvl;
@@ -91,10 +89,9 @@ void UnitPropagator::revert(int decision_level) {
   _finished.clear();
 
   for (int c : recalculate) {
-    const Clause &clause = _clauses[_clause_index[c]].first;
     if (_watchers[c].first != -1) {
-      Literal a = clause[_watchers[c].first];
-      Literal b = clause[_watchers[c].second];
+      Literal a = _clauses[c][_watchers[c].first];
+      Literal b = _clauses[c][_watchers[c].second];
       if ((!_model.defined(a) || _model.value(a)) &&
           (!_model.defined(b) || _model.value(b))) {
         _clauses_with_literal[a.index()].insert(c);
@@ -133,14 +130,13 @@ void UnitPropagator::recheck() {
     for (int c : _clauses_with_literal[lit_index]) {
       bool found = false;
       int from = _watchers[c].second + 1;
-      const Clause &clause = _clauses[_clause_index[c]].first;
-      int size = static_cast<int>(clause.size());
+      int size = static_cast<int>(_clauses[c].size());
       for (int i = 0; i < size - 1; i++) {
         if (from + i == size) from -= size;
         if (from + i == _watchers[c].first) continue;
-        Literal new_watcher = clause[from+i];
+        Literal new_watcher = _clauses[c][from+i];
         if (!_model.defined(new_watcher) || _model.value(new_watcher)) {
-          if (lit == clause[_watchers[c].first])
+          if (lit == _clauses[c][_watchers[c].first])
             _watchers[c].first = _watchers[c].second;
           _watchers[c].second = from+i;
           _clauses_with_literal[new_watcher.index()].insert(c);
@@ -149,9 +145,9 @@ void UnitPropagator::recheck() {
         }
       }
       if (!found) {
-        Literal deducted = clause[_watchers[c].first];
-        if (lit == clause[_watchers[c].first])
-          deducted = clause[_watchers[c].second];
+        Literal deducted = _clauses[c][_watchers[c].first];
+        if (lit == _clauses[c][_watchers[c].first])
+          deducted = _clauses[c][_watchers[c].second];
         _clauses_with_literal[deducted.index()].erase(c);
         _finished.push_back(c);
         if (_model.defined(deducted) && !_model.value(deducted))
@@ -171,7 +167,7 @@ void UnitPropagator::propagation_push(Literal var, int c) {
     return;
   }
   int max_level = 0;
-  for (Literal lit : _clauses[_clause_index[c]].first)
+  for (Literal lit : _clauses[c])
     max_level = std::max(max_level, _level[lit.variable().index()]);
   _level[var.variable().index()] = max_level;
   _deductions[max_level].push_back(var);
@@ -182,10 +178,9 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 
 void UnitPropagator::calculate_watchers(int c) {
   int st = -1, nd = -1;
-  const Clause &clause = _clauses[_clause_index[c]].first;
 
-  for (int i = 0; i < static_cast<int>(clause.size()); ++i) {
-    Literal x = clause[i];
+  for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
+    Literal x = _clauses[c][i];
     if (!_model.defined(x) || _model.value(x)) {
       if (st == -1) {
         st = i;
@@ -198,12 +193,12 @@ void UnitPropagator::calculate_watchers(int c) {
 
   if (nd != -1) {
     _watchers[c] = std:: make_pair(st, nd);
-    _clauses_with_literal[clause[st].index()].insert(c);
-    _clauses_with_literal[clause[nd].index()].insert(c);
+    _clauses_with_literal[_clauses[c][st].index()].insert(c);
+    _clauses_with_literal[_clauses[c][nd].index()].insert(c);
   } else {
     _finished.push_back(c);
     if (st != -1)
-      propagation_push(clause[st], c);
+      propagation_push(_clauses[c][st], c);
     else
       _failed = true;
   }
