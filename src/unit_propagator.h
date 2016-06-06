@@ -6,8 +6,6 @@
 #include <deque>
 #include <queue>
 #include <set>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -31,7 +29,7 @@ class UnitPropagator {
       add_clause(clause);
     }
   }
-
+  
   bool garbage_clauses ();
 
   void assume(Literal var);
@@ -78,14 +76,14 @@ class UnitPropagator {
   void calculate_watchers(int c);
 
   Model _model;
-  std::unordered_map<int, Clause> _clauses;
+  std::vector<std::pair<Clause, int> > _clauses;
+  std::vector<int> _clause_index;
   std::vector<std::pair<int, int> > _watchers;
-  std::unordered_set<int> _finished;
+  std::vector<int> _finished;
   std::vector<std::set<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
   
-  int clauses_num_at_start = -1;
-  int all_clauses_count = 0;
+  int clauses_num_at_start = -1; 
   bool _failed;
   std::vector<int> _reason;
   std::vector<int> _is_reason;
