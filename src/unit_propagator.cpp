@@ -15,7 +15,6 @@ void UnitPropagator::add_clause(const Clause &clause) {
   int c = static_cast<int>(_clause_index.size());
   _clauses.emplace_back(clause, c);
   _clause_index.push_back(c);
-  _is_reason.push_back(false);
   _watchers.push_back(std::make_pair(-1, -1));
 
   calculate_watchers(c);
@@ -70,7 +69,6 @@ int UnitPropagator::diagnose() {
   int c = static_cast<int>(_clause_index.size());
   _clauses.emplace_back(clause, c);
   _clause_index.push_back(c);
-  _is_reason.push_back(false);
   _watchers.push_back(std::make_pair(-1, -1));
   _finished.push_back(c);
   return ret_to_lvl;
@@ -81,7 +79,6 @@ void UnitPropagator::revert(int decision_level) {
     if (_level[i.index()] >= decision_level) {
       _model.unset(i);
       _level[i.index()] = -1;
-      _is_reason[_reason[i.index()]] = false;
       _reason[i.index()] = -1;
     }
 
@@ -178,7 +175,6 @@ void UnitPropagator::propagation_push(Literal var, int c) {
     max_level = std::max(max_level, _level[lit.variable().index()]);
   _level[var.variable().index()] = max_level;
   _deductions[max_level].push_back(var);
-  _is_reason[c] = true;
   _reason[var.variable().index()] = c;
   _model.set(var);
   _propagation_queue.push(var);
@@ -211,29 +207,4 @@ void UnitPropagator::calculate_watchers(int c) {
     else
       _failed = true;
   }
-}
-
-std::vector<std::pair<Clause, int>> UnitPropagator::available_clauses() const {
-  std::vector<std::pair<Clause, int>> clauses;
-  for (const std::pair<Clause, int> &clause_it : _clauses) {
-    if (!_is_reason[clause_it.second]) {
-      clauses.push_back(clause_it);
-    }
-  }
-  return clauses;
-}
-
-void UnitPropagator::forget_clause(int c) {
-  assert(_clause_index.at(c) != -1 && !_is_reason.at(c));
-  int ci = _clause_index[c];
-
-  for (Literal lit : _clauses[ci].first) {
-    _clauses_with_literal[lit.index()].erase(c);
-  }
-
-  int cl = _clauses.back().second;
-  _clauses[ci] = _clauses.back();
-  _clauses.pop_back();
-  _clause_index[c] = -1;
-  _clause_index[cl] = ci;
 }
