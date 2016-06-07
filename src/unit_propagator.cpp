@@ -62,6 +62,7 @@ int UnitPropagator::diagnose() {
       }
     }
   }
+  bump_var_activity(clause);
 
   decay_var_activity();
   decay_clause_activity();
