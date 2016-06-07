@@ -27,8 +27,10 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
   up.add_clauses(clauses);
   const Model& model = up.model();
 
+  up.MAX_CLAUSES_NUM = 1000;
+
   while (!model.all_assigned()) {
-    up.garbage_clauses_glucose();
+    up.garbage_clauses_minisat();
     assert(!up.failed());
     decide();
     while (up.failed()) {

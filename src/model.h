@@ -53,7 +53,13 @@ class Literal {
   int _i;
 };
 
-typedef std::vector<Literal> Clause;
+class Clause : public std::vector<Literal> {
+ public:
+  Clause() {}
+  double &activity() {return _activity;}
+ private:
+  double _activity;
+};
 
 Clause make_clause(std::initializer_list<int> lits);
 

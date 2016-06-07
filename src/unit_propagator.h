@@ -56,6 +56,11 @@ class UnitPropagator {
 
   std::vector<int> redundant();
 
+  /**
+   * Forgets the clauses with given indices. Indices in the ind vector must be
+   * in increasing order. Time complexity: linear wrt. the
+   * size of the whole formula
+   */
   void forget(const std::vector<int>& ind);
 
   bool garbage_clauses_glucose();
@@ -63,6 +68,8 @@ class UnitPropagator {
   bool garbage_clauses_grasp();
 
   bool garbage_clauses_all();
+
+  void garbage_clauses_minisat();
 
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
@@ -77,9 +84,13 @@ class UnitPropagator {
 
   void calculate_watchers(int c);
 
-  void bump_activity(const Clause &);
+  void bump_var_activity(const Clause &);
 
-  void decay_activity();
+  void decay_var_activity();
+
+  void decay_clause_activity();
+
+  void bump_clause_activity(Clause *c);
 
   void restart();
 
@@ -98,6 +109,10 @@ class UnitPropagator {
   const double RESCALE_THRESHOLD = 1e100;
   double _var_inc = 1;
   std::vector<double> _activity;
+
+  const double CLAUSE_DECAY = 0.999;
+  const double CLAUSE_RESCALE_THRESHOLD = 1e20;
+  double _cla_inc = 1;
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
   std::vector<std::vector<Literal>> _deductions;

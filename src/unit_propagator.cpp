@@ -31,8 +31,10 @@ void UnitPropagator::assume(Literal lit) {
 
 int UnitPropagator::diagnose() {
   Clause clause;
-  for (Clause clause_it : _clauses) {
+  for (Clause &clause_it : _clauses) {
     if (_model.spoiled(clause_it)) {
+      bump_var_activity(clause_it);
+      bump_clause_activity(&clause_it);
       clause = clause_it;
       break;
     }
@@ -61,8 +63,8 @@ int UnitPropagator::diagnose() {
     }
   }
 
-  bump_activity(clause);
-  decay_activity();
+  decay_var_activity();
+  decay_clause_activity();
 
   _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
@@ -72,14 +74,14 @@ int UnitPropagator::diagnose() {
 Variable UnitPropagator::active_variable() {
   auto vars = _model.variables();
   return *std::max_element(vars.begin(), vars.end(),
-      [&](Variable v1, Variable v2) {
+      [this](Variable v1, Variable v2) {
         return (_model.defined(v1) && !_model.defined(v2)) ||
             (_model.defined(v1) ==_model.defined(v2)
             && _activity[v1.index()] < _activity[v2.index()]);
       });
 }
 
-void UnitPropagator::bump_activity(const Clause &clause) {
+void UnitPropagator::bump_var_activity(const Clause &clause) {
   for (const auto &l : clause) {
     if ((_activity[l.variable().index()] += _var_inc) > RESCALE_THRESHOLD) {
       for (int i = 0; i < static_cast<int>(_activity.size()); i++) {
@@ -90,7 +92,7 @@ void UnitPropagator::bump_activity(const Clause &clause) {
   }
 }
 
-void UnitPropagator::decay_activity() {
+void UnitPropagator::decay_var_activity() {
   _var_inc /= VAR_DECAY;
 }
 
@@ -345,4 +347,31 @@ bool UnitPropagator::garbage_clauses_grasp() {
     forget(indices);
   }
   return true;
+}
+
+void UnitPropagator::garbage_clauses_minisat() {
+  if (static_cast<int>(_clauses.size()) < MAX_CLAUSES_NUM) {
+    return;
+  }
+  auto learnts = redundant();
+  std::sort(learnts.begin(), learnts.end(), [this](int i, int j) {
+    return _clauses[i].size() > 2 && (_clauses[j].size() == 2 ||
+      _clauses[i].activity() < _clauses[j].activity());
+  });
+  learnts.resize(learnts.size() / 2);
+  std::sort(learnts.begin(), learnts.end());
+  forget(learnts);
+}
+
+void UnitPropagator::decay_clause_activity() {
+  _cla_inc /= CLAUSE_DECAY;
+}
+
+void UnitPropagator::bump_clause_activity(Clause *c){
+  if ( (c->activity() += _cla_inc) > CLAUSE_RESCALE_THRESHOLD ) {
+    for (Clause &d : _clauses) {
+      d.activity() /= CLAUSE_RESCALE_THRESHOLD;
+    }
+    _cla_inc /= CLAUSE_RESCALE_THRESHOLD;
+  }
 }
