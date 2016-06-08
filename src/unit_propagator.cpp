@@ -115,6 +115,8 @@ void UnitPropagator::revert(int decision_level) {
     _clauses_with_literal[(-i).index()].clear();
   }
 
+  while (!_propagation_queue.empty()) _propagation_queue.pop();
+
   for (int c = 0; c < static_cast<int>(_clauses.size()); ++c) {
     if (_watchers[c].first != -1) {
       Literal a = _clauses[c][_watchers[c].first];
@@ -175,9 +177,10 @@ void UnitPropagator::recheck() {
         Literal deducted = _clauses[c][_watchers[c].first];
         if (lit == _clauses[c][_watchers[c].first])
           deducted = _clauses[c][_watchers[c].second];
-        if (_model.defined(deducted) && !_model.value(deducted))
+        if (_model.defined(deducted) && !_model.value(deducted)) {
           _failed = true;
-        else if (!_model.defined(deducted))
+          return;
+        } else if (!_model.defined(deducted))
           propagation_push(deducted, c);
       }
     }
@@ -270,6 +273,8 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
     _clauses_with_literal[(+v).index()].clear();
     _clauses_with_literal[(-v).index()].clear();
   }
+
+  while (!_propagation_queue.empty()) _propagation_queue.pop();
 
   for (int c = 0; c < static_cast<int>(_clauses.size()); ++c) {
     if (_watchers[c].first != -1) {
