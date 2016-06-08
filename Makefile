@@ -69,7 +69,7 @@ load:
 	make clean
 
 benchmark: solver verifier
-	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf150-.* --time-limit 5
+	./scripts/benchmark.py bin/solver bin/verifier tests/ --test-pattern uf200-.* --time-limit 5
 
 clean:
 	rm -f solution submit.zip
