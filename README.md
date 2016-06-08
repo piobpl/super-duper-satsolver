@@ -14,3 +14,4 @@ Super duper satsolver
 
 ##### uf150, TL=5s
  - @f7f446f 69/100 solved, 302s total
+ - @9f92acb 96/100 solved, 161s total
