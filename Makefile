@@ -15,7 +15,7 @@ OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 TESTS=$(patsubst src/%.cpp,obj/%.o,$(TESTSOURCES))
 
 solution: src/solution_main.cpp $(SOURCES)
-	$(CC) $(CXXFLAGS) -o solution $^ $(LDFLAGS)
+	$(CC) -std=c++11 -O2 -static -DNDEBUG -o solution $^ $(LDFLAGS)
 
 zip:
 	rm -f submit.zip
@@ -56,7 +56,7 @@ do_load: CXXFLAGS=-std=c++11 -Wall -Wextra -Wshadow -Wunused -Wconversion \
 	    -O0 -fprofile-arcs -ftest-coverage -static 
 do_load: LDFLAGS=-lgcov
 do_load: clean solver
-	./bin/solver < tests/uf150-010.cnf
+	./bin/solver < tests/uf200-015.cnf
 	mkdir -p load
 	rm -f load/*
 	./scripts/gcovr.py -r . -e ".+test\.cpp" --object-directory=./obj --exclude-unreachable-branches \
