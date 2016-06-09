@@ -2,6 +2,8 @@
 
 #include "../src/model.h"
 
+const double Model::_agility_grow = 0.9999;
+
 Literal operator+(const Variable &v) {
   return Literal(v._i);
 }

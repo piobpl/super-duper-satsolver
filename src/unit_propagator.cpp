@@ -180,8 +180,9 @@ void UnitPropagator::recheck() {
         if (_model.defined(deducted) && !_model.value(deducted)) {
           _failed = true;
           return;
-        } else if (!_model.defined(deducted))
+        } else if (!_model.defined(deducted)) {
           propagation_push(deducted, c);
+        }
       }
     }
   }
@@ -373,7 +374,7 @@ void UnitPropagator::decay_clause_activity() {
   _cla_inc /= CLAUSE_DECAY;
 }
 
-void UnitPropagator::bump_clause_activity(Clause *c){
+void UnitPropagator::bump_clause_activity(Clause *c) {
   if ( (c->activity() += _cla_inc) > CLAUSE_RESCALE_THRESHOLD ) {
     for (Clause &d : _clauses) {
       d.activity() /= CLAUSE_RESCALE_THRESHOLD;

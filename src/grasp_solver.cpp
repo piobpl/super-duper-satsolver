@@ -5,6 +5,8 @@
 #include <tuple>
 #include <vector>
 
+#include "../src/restarts.h"
+
 void GraspSolver::decide() {
   const Model& model = up.model();
   if (std::all_of(clauses.begin(), clauses.end(),
@@ -23,6 +25,8 @@ void GraspSolver::decide() {
 }
 
 void GraspSolver::solve(std::vector<Clause> _clauses) {
+  // GeometricRestarts rs(32, 1.1);
+
   clauses = _clauses;
   up.add_clauses(clauses);
   const Model& model = up.model();
@@ -43,6 +47,10 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
       }
     }
     assert(!up.failed());
+    /*bool block = (up.model().agility() > 0.20);
+    if (rs.restart(block)){
+      up.revert(1);
+    }*/
   }
   solved = true;
 }

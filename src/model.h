@@ -96,7 +96,8 @@ class Model {
   explicit Model(int var_count)
     : _var_count(var_count),
       _def(var_count),
-      _val(var_count) {}
+      _val(var_count),
+      _agility(0) {}
 
   int variable_count() const {
     return _var_count;
@@ -128,6 +129,9 @@ class Model {
 
   void set(Literal x) {
     _def[x.variable().index()] = true;
+    _agility *= _agility_grow;
+    if (_val[x.variable().index()] != x.pos())
+      _agility += 1 - _agility_grow;
     _val[x.variable().index()] = x.pos();
   }
 
@@ -166,11 +170,17 @@ class Model {
     return 1;
   }
 
+  bool agility() const {
+    return _agility;
+  }
+
   friend std::ostream& operator<<(std::ostream &out, const Model &m);
 
  private:
   int _var_count;
   std::vector<bool> _def, _val;
+  double _agility;
+  static const double _agility_grow;
 };
 
 #endif  // SRC_MODEL_H_
