@@ -25,7 +25,7 @@ void GraspSolver::decide() {
 }
 
 void GraspSolver::solve(std::vector<Clause> _clauses) {
-  // GeometricRestarts rs(32, 1.1);
+  GeometricRestarts rs(32, 1.1);
 
   clauses = _clauses;
   up.add_clauses(clauses);
@@ -47,10 +47,10 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
       }
     }
     assert(!up.failed());
-    /*bool block = (up.model().agility() > 0.20);
+    bool block = (up.model().agility() > 0.20);
     if (rs.restart(block)){
       up.revert(1);
-    }*/
+    }
   }
   solved = true;
 }

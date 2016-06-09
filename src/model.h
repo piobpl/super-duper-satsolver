@@ -170,7 +170,7 @@ class Model {
     return 1;
   }
 
-  bool agility() const {
+  double agility() const {
     return _agility;
   }
 
