@@ -48,7 +48,7 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
     }
     assert(!up.failed());
     bool block = (up.model().agility() > 0.20);
-    if (rs.restart(block)){
+    if (rs.restart(block)) {
       up.revert(1);
     }
   }
