@@ -22,3 +22,4 @@ Super duper satsolver
 
 ##### uf200
  - @af3c9df 82/100 solved, 256s total
+ - @646c8ee 90/100 solved, 204s total
