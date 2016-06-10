@@ -40,6 +40,7 @@ class GraspSolver : public Solver {
   std::vector<Clause> clauses;
   bool solved;
 
+  void pre_decide();
   void decide();
 };
 

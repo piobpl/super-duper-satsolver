@@ -183,10 +183,17 @@ std::pair<bool, Literal> UnitPropagator::extract_nonroot_literal(Clause *c) {
 }
 
 void UnitPropagator::recheck() {
+  if (_failed) return;
   while (!_propagation_queue.empty()) {
-    Literal lit = -_propagation_queue.front();
+    Literal lit = _propagation_queue.front();
     _propagation_queue.pop();
     int lit_index = lit.index();
+    for (int c : _clauses_with_literal[lit_index]) {
+      _satisfied_at[c] =
+        std::min(_satisfied_at[c], _level[lit.variable().index()]);
+    }
+    lit = -lit;
+    lit_index = lit.index();
     for (int c : _clauses_with_literal[lit_index]) {
       bool found = false;
       int from = _watchers[c].second + 1;

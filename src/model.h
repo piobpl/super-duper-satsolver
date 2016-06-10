@@ -115,6 +115,10 @@ class Model {
     return _def[v.variable().index()];
   }
 
+  bool last_value(Variable x) const {
+    return _val[x.index()];
+  }
+
   bool value(Variable x) const {
     assert(_def[x.index()]);
     return _val[x.index()];
@@ -130,9 +134,10 @@ class Model {
   void set(Literal x) {
     _def[x.variable().index()] = true;
     _agility *= _agility_grow;
-    if (_val[x.variable().index()] != x.pos())
+    if (_val[x.variable().index()] != x.pos()) {
       _agility += 1 - _agility_grow;
-    _val[x.variable().index()] = x.pos();
+      _val[x.variable().index()] = x.pos();
+    }
   }
 
   void unset(Variable x) {

@@ -20,7 +20,45 @@ void GraspSolver::decide() {
   }
 
   Variable x = up.active_variable();
-  up.assume(+x);
+  if (up.model().last_value(x))
+    up.assume(-x);
+  else
+    up.assume(+x);
+  return;
+}
+
+void GraspSolver::pre_decide() {
+  double expected = -1;
+  Literal x;
+
+  for (Variable v : up.model().variables()) {
+    if (up.model().defined(v)) continue;
+    Literal y = +v;
+    for (int r = 0; r < 2; ++r) {
+      double current = 0;
+      for (const Clause &c : up.clauses()) {
+        double p = 0;
+        for (const Literal z : c) {
+          if (z != -y) {
+            if (z == y) {
+              p = 1;
+            } else if (!up.model().defined(z)) {
+              p = 0.5 + 0.5 * p;
+            } else if (up.model().value(z)) {
+              p = 1;
+            }
+          }
+        }
+        current += p;
+      }
+      if (current > expected) {
+        expected = current;
+        x = y;
+      }
+      y = -y;
+    }
+  }
+  up.assume(x);
   return;
 }
 
