@@ -13,10 +13,10 @@
 
 class UnitPropagator {
  public:
-  int MAX_CLAUSES_NUM = 500;
   explicit UnitPropagator(int variables, int base_clauses)
     : _base_clauses(base_clauses),
       _model(variables),
+      _inactive(1),
       _clauses_with_literal(2*variables),
       _failed(false),
       _reason(variables, -1),
@@ -24,12 +24,13 @@ class UnitPropagator {
       _activity(variables),
       _deductions(1) {}
 
-  void add_clause(const Clause &clause);
+  void add_clause(const Clause &clause, bool run_recheck);
 
   void add_clauses(const std::vector<Clause> &new_clauses) {
     for (Clause clause : new_clauses) {
-      add_clause(clause);
+      add_clause(clause, false);
     }
+    recheck();
   }
 
   void assume(Literal var);
@@ -74,7 +75,7 @@ class UnitPropagator {
  private:
   std::pair<bool, Literal> extract_nonroot_literal(Clause *c);
 
-  bool recheck_clause(Literal, int, int);
+  void rebuild();
 
   void recheck();
 
@@ -99,6 +100,9 @@ class UnitPropagator {
   Model _model;
   std::vector<Clause> _clauses;
   std::vector<std::pair<int, int> > _watchers;
+  std::vector<int> _satisfied_at;
+  std::vector<int> _active;
+  std::vector<std::vector<int>> _inactive;
   std::vector<std::vector<int> > _clauses_with_literal;
   std::queue<Literal> _propagation_queue;
   bool _failed;
@@ -113,6 +117,9 @@ class UnitPropagator {
   const double CLAUSE_DECAY = 0.999;
   const double CLAUSE_RESCALE_THRESHOLD = 1e20;
   double _cla_inc = 1;
+
+  const int MAX_CLAUSES_GROW = 100;
+  int MAX_CLAUSES_NUM = 1000;
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
   std::vector<std::vector<Literal>> _deductions;
