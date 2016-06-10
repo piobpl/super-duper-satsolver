@@ -21,9 +21,9 @@ void GraspSolver::decide() {
 
   Variable x = up.active_variable();
   if (up.model().last_value(x))
-    up.assume(-x);
-  else
     up.assume(+x);
+  else
+    up.assume(-x);
   return;
 }
 
