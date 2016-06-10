@@ -16,7 +16,6 @@ void UnitPropagator::add_clause(const Clause &clause, bool run_recheck) {
   _clauses.push_back(clause);
   _watchers.push_back(std::make_pair(-1, -1));
   _satisfied_at.push_back(std::numeric_limits<int>::max());
-  _active.push_back(c);
 
   calculate_watchers(c);
 
@@ -109,19 +108,30 @@ void UnitPropagator::rebuild() {
     _clauses_with_literal[(-i).index()].clear();
   }
 
-  std::vector<int> new_active;
+  std::vector<int> old_active = _active;
+  _active.clear();
 
-  for (int c : _active) {
+  for (int c : old_active) {
     if (_satisfied_at[c] >= static_cast<int>(_deductions.size())) {
       _satisfied_at[c] = std::numeric_limits<int>::max();
-      new_active.push_back(c);
       if (_watchers[c].first != -1) {
         Literal a = _clauses[c][_watchers[c].first];
         Literal b = _clauses[c][_watchers[c].second];
         if ((!_model.defined(a) || _model.value(a)) &&
             (!_model.defined(b) || _model.value(b))) {
-          _clauses_with_literal[a.index()].push_back(c);
-          _clauses_with_literal[b.index()].push_back(c);
+          if (_model.defined(a) || _model.defined(b)) {
+            if (_model.defined(a))
+              _satisfied_at[c] =
+                std::min(_satisfied_at[c], _level[a.variable().index()]);
+            if (_model.defined(b))
+              _satisfied_at[c] =
+                std::min(_satisfied_at[c], _level[b.variable().index()]);
+            _inactive[_satisfied_at[c]].push_back(c);
+          } else {
+            _active.push_back(c);
+            _clauses_with_literal[a.index()].push_back(c);
+            _clauses_with_literal[b.index()].push_back(c);
+          }
         } else {
           calculate_watchers(c);
         }
@@ -132,8 +142,6 @@ void UnitPropagator::rebuild() {
       _inactive[_satisfied_at[c]].push_back(c);
     }
   }
-
-  _active = new_active;
 }
 
 void UnitPropagator::revert(int decision_level) {
@@ -193,7 +201,9 @@ void UnitPropagator::recheck() {
           _watchers[c].second = from+i;
           if (_model.defined(new_watcher))
             _satisfied_at[c] =
-              std::min(_satisfied_at[c], _level[new_watcher.variable().index()]);
+              std::min(_satisfied_at[c],
+                _level[new_watcher.variable().index()]);
+          else
             _clauses_with_literal[new_watcher.index()].push_back(c);
           found = true;
           break;
@@ -233,12 +243,15 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 void UnitPropagator::calculate_watchers(int c) {
   int st = -1, nd = -1;
 
+  bool inactive = false;
+
   for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
     Literal x = _clauses[c][i];
     if (!_model.defined(x) || _model.value(x)) {
       if (_model.defined(x)) {
         _satisfied_at[c] =
           std::min(_satisfied_at[c], _level[x.variable().index()]);
+        inactive = true;
       }
       if (st == -1) {
         st = i;
@@ -248,6 +261,12 @@ void UnitPropagator::calculate_watchers(int c) {
       }
     }
   }
+  if (inactive) {
+    _inactive[_satisfied_at[c]].push_back(c);
+    return;
+  }
+
+  _active.push_back(c);
 
   if (nd != -1) {
     _watchers[c] = std:: make_pair(st, nd);
@@ -296,7 +315,7 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
   _clauses.resize(t);
   _watchers.resize(t);
   _satisfied_at.resize(t);
-  
+
   for (Variable v : _model.variables()) {
     if (_reason[v.index()] != -1 && _reason[v.index()] >= _base_clauses) {
       assert(new_id[_reason[v.index()]] != -1);
@@ -333,7 +352,7 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
       } else {
         ++i;
       }
-    }  
+    }
   }
 
   rebuild();
