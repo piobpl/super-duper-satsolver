@@ -16,8 +16,7 @@
 class GraspSolver : public Solver {
  public:
   explicit GraspSolver(int _variables, int _base_clauese)
-    : variables(_variables), up(_variables, _base_clauese),
-    bohm(1., 2., .5) {}
+    : variables(_variables), up(_variables, _base_clauese) {}
 
   bool success() override {
     return solved;
@@ -36,11 +35,12 @@ class GraspSolver : public Solver {
  private:
   int variables;
   UnitPropagator up;
-  BOHM bohm;
   std::vector<Clause> clauses;
   bool solved;
+  std::mt19937_64 mte;
 
   void pre_decide();
+  void random_decide();
   void decide();
 };
 

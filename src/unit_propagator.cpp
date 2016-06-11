@@ -25,7 +25,7 @@ void UnitPropagator::add_clause(const Clause &clause, bool run_recheck) {
 void UnitPropagator::assume(Literal lit) {
   _level[lit.variable().index()] = static_cast<int>(_deductions.size());
   _deductions.push_back(std::vector<Literal>{lit});
-  _inactive.push_back(std::vector<int>{});
+  _satisfied.push_back(std::vector<int>{});
   _model.set(lit);
   _propagation_queue.push(lit);
   recheck();
@@ -189,38 +189,15 @@ void UnitPropagator::rebuild() {
     _clauses_with_literal[(-i).index()].clear();
   }
 
-  std::vector<int> old_active = _active;
-  _active.clear();
+  std::vector<int> rc = _unsatisfied;
+  _unsatisfied.clear();
 
-  for (int c : old_active) {
+  for (int c : rc) {
     if (_satisfied_at[c] >= static_cast<int>(_deductions.size())) {
       _satisfied_at[c] = std::numeric_limits<int>::max();
-      if (_watchers[c].first != -1) {
-        Literal a = _clauses[c][_watchers[c].first];
-        Literal b = _clauses[c][_watchers[c].second];
-        if ((!_model.defined(a) || _model.value(a)) &&
-            (!_model.defined(b) || _model.value(b))) {
-          if (_model.defined(a) || _model.defined(b)) {
-            if (_model.defined(a))
-              _satisfied_at[c] =
-                std::min(_satisfied_at[c], _level[a.variable().index()]);
-            if (_model.defined(b))
-              _satisfied_at[c] =
-                std::min(_satisfied_at[c], _level[b.variable().index()]);
-            _inactive[_satisfied_at[c]].push_back(c);
-          } else {
-            _active.push_back(c);
-            _clauses_with_literal[a.index()].push_back(c);
-            _clauses_with_literal[b.index()].push_back(c);
-          }
-        } else {
-          calculate_watchers(c);
-        }
-      } else {
-        calculate_watchers(c);
-      }
+      calculate_watchers(c);
     } else {
-      _inactive[_satisfied_at[c]].push_back(c);
+      _satisfied[_satisfied_at[c]].push_back(c);
     }
   }
 }
@@ -236,31 +213,16 @@ void UnitPropagator::revert(int decision_level) {
   if (decision_level < static_cast<int>(_deductions.size()))
     _deductions.resize(decision_level);
 
-  while (decision_level < static_cast<int>(_inactive.size())) {
-    _active.insert(_active.end(),
-      _inactive.back().begin(),
-      _inactive.back().end());
-    _inactive.pop_back();
+  while (decision_level < static_cast<int>(_satisfied.size())) {
+    _unsatisfied.insert(_unsatisfied.end(),
+      _satisfied.back().begin(),
+      _satisfied.back().end());
+    _satisfied.pop_back();
   }
 
   rebuild();
 
   recheck();
-}
-
-std::pair<bool, Literal> UnitPropagator::extract_nonroot_literal(Clause *c) {
-  int place = -1;
-  for (int i = 0; i < static_cast<int>(c->size()); ++i) {
-    if (_reason[c->at(i).variable().index()] != -1) {
-      place = i;
-      break;
-    }
-  }
-  if (place == -1) return std::pair<bool, Literal>(false, Literal());
-  std::swap(c->at(place), c->back());
-  Literal x = c->back();
-  c->pop_back();
-  return std::pair<bool, Literal>(true, x);
 }
 
 void UnitPropagator::recheck() {
@@ -277,22 +239,20 @@ void UnitPropagator::recheck() {
     lit_index = lit.index();
     for (int c : _clauses_with_literal[lit_index]) {
       bool found = false;
-      int from = _watchers[c].second + 1;
       int size = static_cast<int>(_clauses[c].size());
-      for (int i = 0; i < size - 1; i++) {
-        if (from + i == size) from -= size;
-        if (from + i == _watchers[c].first) continue;
-        Literal new_watcher = _clauses[c][from+i];
+      for (int i = _watchers[c].second + 1; i < size; i++) {
+        Literal new_watcher = _clauses[c][i];
         if (!_model.defined(new_watcher) || _model.value(new_watcher)) {
-          if (lit == _clauses[c][_watchers[c].first])
-            _watchers[c].first = _watchers[c].second;
-          _watchers[c].second = from+i;
-          if (_model.defined(new_watcher))
+          if (_model.defined(new_watcher)) {
             _satisfied_at[c] =
               std::min(_satisfied_at[c],
                 _level[new_watcher.variable().index()]);
-          else
+          } else {
+            if (lit == _clauses[c][_watchers[c].first])
+              _watchers[c].first = _watchers[c].second;
+            _watchers[c].second = i;
             _clauses_with_literal[new_watcher.index()].push_back(c);
+          }
           found = true;
           break;
         }
@@ -331,15 +291,14 @@ void UnitPropagator::propagation_push(Literal var, int c) {
 void UnitPropagator::calculate_watchers(int c) {
   int st = -1, nd = -1;
 
-  bool inactive = false;
-
+  bool sat = false;
   for (int i = 0; i < static_cast<int>(_clauses[c].size()); ++i) {
     Literal x = _clauses[c][i];
     if (!_model.defined(x) || _model.value(x)) {
       if (_model.defined(x)) {
-        _satisfied_at[c] =
-          std::min(_satisfied_at[c], _level[x.variable().index()]);
-        inactive = true;
+        _satisfied_at[c] = _level[x.variable().index()];
+        sat = true;
+        break;
       }
       if (st == -1) {
         st = i;
@@ -349,12 +308,11 @@ void UnitPropagator::calculate_watchers(int c) {
       }
     }
   }
-  if (inactive) {
-    _inactive[_satisfied_at[c]].push_back(c);
+  if (sat) {
+    _satisfied[_satisfied_at[c]].push_back(c);
     return;
   }
-
-  _active.push_back(c);
+  _unsatisfied.push_back(c);
 
   if (nd != -1) {
     _watchers[c] = std:: make_pair(st, nd);
@@ -412,13 +370,13 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
   }
 
   i = 0;
-  while (i < static_cast<int>(_active.size())) {
-    if (_active[i] >= _base_clauses) {
-      if (new_id[_active[i]] == -1) {
-        std::swap(_active[i], _active.back());
-        _active.pop_back();
+  while (i < static_cast<int>(_unsatisfied.size())) {
+    if (_unsatisfied[i] >= _base_clauses) {
+      if (new_id[_unsatisfied[i]] == -1) {
+        std::swap(_unsatisfied[i], _unsatisfied.back());
+        _unsatisfied.pop_back();
       } else {
-        _active[i] = new_id[_active[i]];
+        _unsatisfied[i] = new_id[_unsatisfied[i]];
         ++i;
       }
     } else {
@@ -426,15 +384,15 @@ void UnitPropagator::forget(const std::vector<int>& ind) {
     }
   }
 
-  for (int d = 0; d < static_cast<int>(_inactive.size()); ++d) {
+  for (int d = 0; d < static_cast<int>(_satisfied.size()); ++d) {
     i = 0;
-    while (i < static_cast<int>(_inactive[d].size())) {
-      if (_inactive[d][i] >= _base_clauses) {
-        if (new_id[_inactive[d][i]] == -1) {
-          std::swap(_inactive[d][i], _inactive[d].back());
-          _inactive[d].pop_back();
+    while (i < static_cast<int>(_satisfied[d].size())) {
+      if (_satisfied[d][i] >= _base_clauses) {
+        if (new_id[_satisfied[d][i]] == -1) {
+          std::swap(_satisfied[d][i], _satisfied[d].back());
+          _satisfied[d].pop_back();
         } else {
-          _inactive[d][i] = new_id[_inactive[d][i]];
+          _satisfied[d][i] = new_id[_satisfied[d][i]];
           ++i;
         }
       } else {

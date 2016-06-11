@@ -62,17 +62,47 @@ void GraspSolver::pre_decide() {
   return;
 }
 
+void GraspSolver::random_decide() {
+  std::vector<Literal> pos;
+  for (Variable v : up.model().variables()) {
+    if (!up.model().defined(v)) {
+      pos.push_back(+v);
+      pos.push_back(-v);
+    }
+  }
+  int n = static_cast<int>(pos.size());
+  int i = std::uniform_int_distribution<int>(0, n-1)(mte);
+  up.assume(pos[i]);
+}
+
 void GraspSolver::solve(std::vector<Clause> _clauses) {
   GeometricRestarts rs(32, 1.1);
+  GeometricRestarts hard(16000, 1);
 
   clauses = _clauses;
   up.add_clauses(clauses);
   const Model& model = up.model();
 
+  int pre_phase = 0;
+  int rand_phase = 0;
+
+  bool gcm = true;
+
   while (!model.all_assigned()) {
-    up.garbage_clauses_minisat();
+    if (gcm)
+      up.garbage_clauses_minisat();
+    else
+      up.garbage_clauses_glucose();
     assert(!up.failed());
-    decide();
+    if (pre_phase) {
+      --pre_phase;
+      pre_decide();
+    } else if (rand_phase) {
+      --rand_phase;
+      random_decide();
+    } else {
+      decide();
+    }
     while (up.failed()) {
       int beta = up.diagnose();
       if (beta == 0) {
@@ -83,9 +113,13 @@ void GraspSolver::solve(std::vector<Clause> _clauses) {
       }
     }
     assert(!up.failed());
-    bool block = (up.model().agility() > 0.20);
+    bool block = (up.model().agility() > 0.20 || pre_phase > 0);
     if (rs.restart(block)) {
       up.revert(1);
+      rand_phase = 10;
+    }
+    if (hard.restart(false)) {
+      gcm = !gcm;
     }
   }
   solved = true;

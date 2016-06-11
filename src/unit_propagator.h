@@ -16,13 +16,13 @@ class UnitPropagator {
   explicit UnitPropagator(int variables, int base_clauses)
     : _base_clauses(base_clauses),
       _model(variables),
-      _inactive(1),
-      _clauses_with_literal(2*variables),
       _failed(false),
+      _clauses_with_literal(2*variables),
+      _satisfied(1),
       _reason(variables, -1),
       _level(variables, -1),
-      _activity(variables),
-      _deductions(1) {}
+      _deductions(1),
+      _activity(variables) {}
 
   void add_clause(const Clause &clause, bool run_recheck);
 
@@ -96,18 +96,22 @@ class UnitPropagator {
   void restart();
 
   int _base_clauses;
-
   Model _model;
-  std::vector<Clause> _clauses;
-  std::vector<std::pair<int, int> > _watchers;
-  std::vector<int> _satisfied_at;
-  std::vector<int> _active;
-  std::vector<std::vector<int>> _inactive;
-  std::vector<std::vector<int> > _clauses_with_literal;
-  std::queue<Literal> _propagation_queue;
   bool _failed;
+
+  std::vector<Clause> _clauses;
+  std::vector<std::pair<int, int>> _watchers;
+  std::vector<std::vector<int>> _clauses_with_literal;
+
+  std::vector<int> _unsatisfied;
+  std::vector<std::vector<int>> _satisfied;
+  std::vector<int> _satisfied_at;
+
+  std::queue<Literal> _propagation_queue;
+
   std::vector<int> _reason;
   std::vector<int> _level;
+  std::vector<std::vector<Literal>> _deductions;
 
   const double VAR_DECAY = 0.95;
   const double RESCALE_THRESHOLD = 1e100;
@@ -119,10 +123,7 @@ class UnitPropagator {
   double _cla_inc = 1;
 
   const int MAX_CLAUSES_GROW = 100;
-  int MAX_CLAUSES_NUM = 2000;
-
-  // unused in brutal up std::queue<Literal> _propagation_queue;
-  std::vector<std::vector<Literal>> _deductions;
+  int MAX_CLAUSES_NUM = 3000;
 };
 
 #endif  // SRC_UNIT_PROPAGATOR_H_
