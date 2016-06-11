@@ -119,7 +119,7 @@ class UnitPropagator {
   double _cla_inc = 1;
 
   const int MAX_CLAUSES_GROW = 100;
-  int MAX_CLAUSES_NUM = 1000;
+  int MAX_CLAUSES_NUM = 2000;
 
   // unused in brutal up std::queue<Literal> _propagation_queue;
   std::vector<std::vector<Literal>> _deductions;
