@@ -51,100 +51,98 @@ int UnitPropagator::diagnose() {
     int i = x.variable().index();
     ret_to_lvl = std::max(ret_to_lvl, _level[i]);
   }
-  
-  for(Literal x : clause) {
-    if(_level[x.variable().index()] == ret_to_lvl){
-		blacks.push_back(x);
-		was_here[x.variable().index()] = true;
-	}
-  }
-  //TOP SORT
 
-  
-  while(blacks.size() > 0){
-	  Literal bl = blacks.back();
-	  blacks.pop_back();
-	  if(_reason[bl.variable().index()] == -1){
-		  continue;
-	  }
-	  const Clause& temp_edges = _clauses[_reason[bl.variable().index()]];
-	  
-	  for(Literal x: temp_edges){
-		  if(_level[x.variable().index()] == ret_to_lvl && bl.variable() != x.variable()){
-			  int x_ind = x.variable().index();
-			  top_count[x_ind]++;
-			  if(!was_here[x_ind]){
-				  was_here[x_ind] = true;
-				  blacks.push_back(x);
-			  }
-		  }
-	  }
+  for (Literal x : clause) {
+      if (_level[x.variable().index()] == ret_to_lvl) {
+      blacks.push_back(x);
+      was_here[x.variable().index()] = true;
+    }
   }
-  
+  // TOP SORT
+
+  while (blacks.size() > 0) {
+    Literal bl = blacks.back();
+    blacks.pop_back();
+    if (_reason[bl.variable().index()] == -1) {
+      continue;
+    }
+    const Clause& temp_edges = _clauses[_reason[bl.variable().index()]];
+
+    for (Literal x : temp_edges) {
+      if (_level[x.variable().index()] == ret_to_lvl
+          && bl.variable() != x.variable()) {
+        int x_ind = x.variable().index();
+        top_count[x_ind]++;
+        if (!was_here[x_ind]) {
+          was_here[x_ind] = true;
+          blacks.push_back(x);
+        }
+      }
+    }
+  }
+
   int temp_index = 0;
   std::vector<int> top_index;
   std::vector<int> top_queue;
   top_index.resize(_model.variable_count(), -1);
-  for(int i = 0; i<_model.variable_count(); ++i){
-	  if(was_here[i]){
-		  if(top_count[i] == 0){
-			  top_index[i] = (temp_index++);
-			  top_queue.push_back(i);
-		  }
-	  }
+  for (int i = 0; i < _model.variable_count(); ++i) {
+    if (was_here[i]) {
+      if (top_count[i] == 0) {
+        top_index[i] = (temp_index++);
+        top_queue.push_back(i);
+      }
+    }
   }
-  
-  
-  while(top_queue.size() > 0){
-	  int reso = _reason[top_queue.back()];
-	  top_queue.pop_back();
-	  if(reso == -1){
-		  continue;
-	  }
-	  Clause& cl = _clauses[reso];
-	  for(Literal x: cl){
-		  int x_ind = x.variable().index();
-		  top_count[x_ind] --;
-		  if(top_count[x_ind] == 0){
-			  top_index[x_ind] = (temp_index++);
-			  top_queue.push_back(x_ind);
-		  }
-	  }
-	  
+
+  while (top_queue.size() > 0) {
+    int reso = _reason[top_queue.back()];
+    top_queue.pop_back();
+    if (reso == -1) {
+      continue;
+    }
+    Clause& cl = _clauses[reso];
+    for (Literal x : cl) {
+      int x_ind = x.variable().index();
+      top_count[x_ind]--;
+      if (top_count[x_ind] == 0) {
+        top_index[x_ind] = (temp_index++);
+        top_queue.push_back(x_ind);
+      }
+    }
   }
   was_here.resize(0); was_here.resize(_model.variable_count(), false);
-  for(Literal x: clause) 
-      was_here[x.variable().index()] = true;
-  while(true){ 
-	int min_ind = -1, count = 0;
-	int in_cl_index = -1, it = 0;;
-    for(Literal x: clause){
-		int x_ind = x.variable().index();
-		if(_level[x_ind] == ret_to_lvl){
-			++count;
-			if((min_ind == -1) || (top_index[min_ind] > top_index[x_ind])){
-				min_ind = x_ind;
-				in_cl_index = it;
-			}
-		}
-		it++;
-	}
-	if(count == 1){
-		break;
-	}
-	std::swap (clause.back(), clause.at(in_cl_index));
-	Literal to_remove = clause.back();
-	clause.pop_back();
-	
-	
-	assert(_reason[to_remove.variable().index()] != -1);
-	for(Literal x: _clauses[_reason[to_remove.variable().index()]]){
-		int x_ind = x.variable().index();
-		if(!was_here[x_ind] && x.variable() != to_remove.variable()){
-			was_here[x_ind] = true;
-			clause.push_back(x);
-		}
-	} 
+  for (Literal x : clause) {
+    was_here[x.variable().index()] = true;
+  }
+  while (true) {
+    int min_ind = -1, count = 0;
+    int in_cl_index = -1, it = 0;
+    for (Literal x : clause) {
+      int x_ind = x.variable().index();
+      if (_level[x_ind] == ret_to_lvl) {
+        ++count;
+        if ((min_ind == -1) || (top_index[min_ind] > top_index[x_ind])) {
+          min_ind = x_ind;
+          in_cl_index = it;
+        }
+      }
+      it++;
+    }
+    if (count == 1) {
+      break;
+    }
+    std::swap(clause.back(), clause.at(in_cl_index));
+    Literal to_remove = clause.back();
+    clause.pop_back();
+
+    assert(_reason[to_remove.variable().index()] != -1);
+    for (Literal x : _clauses[_reason[to_remove.variable().index()]]) {
+      int x_ind = x.variable().index();
+      if (!was_here[x_ind] && x.variable() != to_remove.variable()) {
+        was_here[x_ind] = true;
+        clause.push_back(x);
+      }
+    }
   }
 
   bump_var_activity(clause);
