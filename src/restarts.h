@@ -3,6 +3,8 @@
 #ifndef SRC_RESTARTS_H_
 #define SRC_RESTARTS_H_
 
+#include <vector>
+
 class GeometricRestarts {
  public:
   GeometricRestarts(int n, double a) : _n(n), _i(0), _a(a) {}
@@ -27,10 +29,10 @@ class LubyRestarts {
 
   bool restart(bool blocked) {
     ++k;
-    if(!blocked && k >= a[i]){
+    if (!blocked && k >= a[i]) {
       k = 0;
       ++i;
-      if (i == static_cast<int>(a.size())){
+      if (i == static_cast<int>(a.size())) {
         a.insert(a.end(), a.begin(), a.end());
         a.push_back(a.back()*2);
       }
