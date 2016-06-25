@@ -30,8 +30,9 @@ void solve() {
 }
 
 int main() {
-  int z;
-  scanf("%d ", &z);
-  while (z--) solve();
+//  int z;
+//  scanf("%d ", &z);
+//  while (z--) solve();
+  solve();
   return 0;
 }

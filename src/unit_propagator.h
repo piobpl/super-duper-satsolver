@@ -122,8 +122,8 @@ class UnitPropagator {
   const double CLAUSE_RESCALE_THRESHOLD = 1e20;
   double _cla_inc = 1;
 
-  const int MAX_CLAUSES_GROW = 100;
-  int MAX_CLAUSES_NUM = 3000;
+  const int MAX_CLAUSES_GROW = 0;
+  int MAX_CLAUSES_NUM = 5000;
 };
 
 #endif  // SRC_UNIT_PROPAGATOR_H_
